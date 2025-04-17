@@ -15,7 +15,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { name, nim, email, password } = registerDto;
+    const { fullname, nim, email, password } = registerDto;
     
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
@@ -37,7 +37,7 @@ export class AuthService {
     // Create new user
     const user = await this.prisma.user.create({
       data: {
-        name,
+        fullname,
         nim,
         email,
         password: hashedPassword,

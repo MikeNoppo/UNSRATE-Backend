@@ -13,7 +13,7 @@ export class LoginDto {
 export class RegisterDto {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  fullname: string;
 
   @IsNotEmpty()
   @IsString()

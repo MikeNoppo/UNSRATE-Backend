@@ -27,7 +27,7 @@ model Token {
 
 model User {
   id             String    @id @default(cuid())
-  name           String
+  fullname       String
   nim            String    @unique
   email          String    @unique 
   password       String
