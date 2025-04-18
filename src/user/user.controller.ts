@@ -1,6 +1,7 @@
 import { Controller, Patch, Body, UseGuards } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
 import { UserProfileResponse } from './dto/user-profile-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../auth/decorators/user.decorator';
@@ -82,5 +83,73 @@ export class UsersController {
     @Body() updateProfileDto: UpdateUserProfileDto,
   ) {
     return this.usersService.updateUserProfile(userId, updateProfileDto);
+  }
+
+  @Patch('photos')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ 
+    summary: 'Manage user photos',
+    description: 'Add or remove photos from the user profile, and set profile picture.'
+  })
+  @ApiBody({
+    description: 'Photo management operations',
+    type: ManageUserPhotosDto,
+    examples: {
+      addPhotos: {
+        summary: 'Add new photos',
+        description: 'Add new photos to the user profile',
+        value: {
+          addPhotos: ['https://example.com/new-photo1.jpg', 'https://example.com/new-photo2.jpg'],
+        }
+      },
+      removePhotos: {
+        summary: 'Remove photos',
+        description: 'Remove specific photos from the user profile',
+        value: {
+          removePhotos: ['https://example.com/old-photo.jpg'],
+        }
+      },
+      setProfilePic: {
+        summary: 'Set profile picture',
+        description: 'Update the main profile picture',
+        value: {
+          profilePicture: 'https://example.com/new-profile.jpg',
+        }
+      },
+      fullExample: {
+        summary: 'Complete photo management',
+        description: 'Perform multiple photo operations at once',
+        value: {
+          addPhotos: ['https://example.com/new-photo1.jpg', 'https://example.com/new-photo2.jpg'],
+          removePhotos: ['https://example.com/old-photo.jpg'],
+          profilePicture: 'https://example.com/new-profile.jpg',
+        }
+      },
+    }
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Photos updated successfully',
+    schema: {
+      properties: {
+        id: { type: 'string', example: '7f1e1546-76a5-4967-b63e-ac9c9f2bbd7e' },
+        fullname: { type: 'string', example: 'John Doe' },
+        profilePicture: { type: 'string', example: 'https://example.com/profile.jpg' },
+        Photos: { 
+          type: 'array',
+          items: { type: 'string' },
+          example: ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg'] 
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Valid JWT token is required' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async managePhotos(
+    @User('id') userId: string,
+    @Body() photosDto: ManageUserPhotosDto,
+  ) {
+    return this.usersService.manageUserPhotos(userId, photosDto);
   }
 }
