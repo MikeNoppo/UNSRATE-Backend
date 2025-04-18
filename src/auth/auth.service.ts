@@ -181,6 +181,11 @@ export class AuthService {
     
     // Calculate expiry date (7 days from now)
     const expiresAt = add(new Date(), { days: 7 });
+
+    // delete existing tokens for the users before creating new one
+    await this.prisma.token.deleteMany({
+      where:{userId}
+    });
     
     // Save refresh token to database
     await this.prisma.token.create({
