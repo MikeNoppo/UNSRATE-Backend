@@ -1,6 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 
+/**
+ * Response DTO for user profile data
+ */
 export class UserProfileResponse {
   @ApiProperty({
     description: 'Unique identifier for the user',
