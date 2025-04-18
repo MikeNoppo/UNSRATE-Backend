@@ -4,8 +4,9 @@ import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { User } from './decorators/user.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
-
+@ApiTags('auth') // Using lowercase 'auth' to match the tag in main.ts
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
