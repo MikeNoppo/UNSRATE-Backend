@@ -3,7 +3,7 @@ import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
-import { ApiDashboardStats } from './decorators/admin-swagger.decorators';
+import { ApiDashboardStats } from '../decorators/admin/admin-swagger.decorators';
 
 @ApiTags('Admin')
 @ApiBearerAuth()

@@ -4,7 +4,7 @@ import {
   ApiResponse, 
   ApiBearerAuth
 } from '@nestjs/swagger';
-import { DashboardStatsResponseDto } from '../dto/dashboard-stats.dto';
+import { DashboardStatsResponseDto } from '../../admin/dto/dashboard-stats.dto';
 
 /**
  * Swagger decorator factory for admin dashboard statistics endpoint
