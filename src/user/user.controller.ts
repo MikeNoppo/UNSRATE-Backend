@@ -5,7 +5,7 @@ import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiUpdateUserProfile, ApiManageUserPhotos } from '../decorators/user-swagger.decorators';
+import { ApiUpdateUserProfile, ApiManageUserPhotos } from '../decorators/user/user-swagger.decorators';
 
 @ApiTags('users')
 @Controller('users')

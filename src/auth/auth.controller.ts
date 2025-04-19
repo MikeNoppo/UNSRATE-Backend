@@ -10,7 +10,7 @@ import {
   ApiLoginUser, 
   ApiRefreshToken, 
   ApiLogoutUser 
-} from '../decorators/auth-swagger.decorators';
+} from '../decorators/auth/auth-swagger.decorators';
 
 @ApiTags('auth')
 @Controller('auth')

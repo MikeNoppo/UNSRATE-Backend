@@ -9,7 +9,7 @@ import {
   GenderPreferenceProperty,
   MinAgePreferenceProperty,
   MaxAgePreferenceProperty
-} from '../../decorators/user-property.decorators';
+} from '../../decorators/user/user-property.decorators';
 
 export class UpdateUserProfileDto {
   @FullnameProperty()

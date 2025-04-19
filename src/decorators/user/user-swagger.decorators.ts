@@ -5,14 +5,14 @@ import {
   ApiBearerAuth,
   ApiBody
 } from '@nestjs/swagger';
-import { UpdateUserProfileDto } from '../user/dto/update-user-profile.dto';
-import { UserProfileResponse } from '../user/dto/user-profile-response.dto';
-import { ManageUserPhotosDto } from '../user/dto/manage-user-photos.dto';
+import { UpdateUserProfileDto } from '../../user/dto/update-user-profile.dto';
+import { UserProfileResponse } from '../../user/dto/user-profile-response.dto';
+import { ManageUserPhotosDto } from '../../user/dto/manage-user-photos.dto';
 
 /**
  * Swagger decorator factory for the update profile endpoint
  */
-export function ApiUpdateProfile() {
+export function ApiUpdateUserProfile() {
   return applyDecorators(
     ApiBearerAuth(),
     ApiOperation({ 
@@ -78,7 +78,7 @@ export function ApiUpdateProfile() {
 /**
  * Swagger decorator factory for the manage photos endpoint
  */
-export function ApiManagePhotos() {
+export function ApiManageUserPhotos() {
   return applyDecorators(
     ApiBearerAuth(),
     ApiOperation({ 

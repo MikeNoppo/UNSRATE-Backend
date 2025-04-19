@@ -5,7 +5,7 @@ import {
   ApiBody,
   ApiTags
 } from '@nestjs/swagger';
-import { LoginDto, RegisterDto } from '../auth/dto/auth.dto';
+import { LoginDto, RegisterDto } from '../../auth/dto/auth.dto';
 
 /**
  * Swagger decorator factory for the auth register endpoint
