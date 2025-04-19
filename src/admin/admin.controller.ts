@@ -2,6 +2,7 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'; 
+import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth() 
@@ -15,16 +16,10 @@ export class AdminController {
   @ApiResponse({
     status: 200,
     description: 'Returns dashboard statistics.',
-    // You might want to create a DTO for this response structure later
-    schema: {
-      example: {
-        totalUsers: 150,
-        verifiedUsers: 75,
-      },
-    },
+    type: DashboardStatsResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getDashboardStats() {
+  async getDashboardStats(): Promise<DashboardStatsResponseDto> {
     return this.adminService.getDashboardStats();
   }
 }
