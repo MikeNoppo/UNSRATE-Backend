@@ -1,9 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
-import { ApiDashboardStats } from '../decorators/admin/admin-swagger.decorators';
+import { ApiDashboardStats, ApiListUsers } from '../decorators/admin/admin-swagger.decorators';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { ListUsersResponseDto } from './dto/list-users-response.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -16,5 +18,11 @@ export class AdminController {
   @ApiDashboardStats()
   async getDashboardStats(): Promise<DashboardStatsResponseDto> {
     return this.adminService.getDashboardStats();
+  }
+
+  @Get('users')
+  @ApiListUsers()
+  async listUsers(@Query() query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
+    return this.adminService.listUsers(query);
   }
 }
