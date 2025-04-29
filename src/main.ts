@@ -12,6 +12,13 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter()
   );
+
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    // preflightContinue: false,
+    credentials: true,
+  });
   
   // Enable validation
   app.useGlobalPipes(new ValidationPipe({
