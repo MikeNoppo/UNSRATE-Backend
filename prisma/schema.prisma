@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output = "app/generator/prisma/client"
 }
 
 datasource db {
@@ -44,6 +45,7 @@ model User {
   fakultas       String?   
   prodi          String?
   dateOfBirth    DateTime?
+  age            Int
   gender         Gender?   
   alamat         String?   // Maybe less relevant for campus app? fakultas/prodi might be enough
   interests      UserInterest[]
