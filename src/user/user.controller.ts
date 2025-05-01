@@ -1,4 +1,4 @@
-import { Controller, Patch, Body, UseGuards } from '@nestjs/common';
+import { Controller, Patch, Body, UseGuards, Get } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
@@ -12,6 +12,12 @@ import { ApiUpdateUserProfile, ApiManageUserPhotos } from '../decorators/user/us
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getUserProfile(@User('id') userid : string) {
+    return this.usersService.getUserProfile(userid);
+  }
+  
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   @ApiUpdateUserProfile()
