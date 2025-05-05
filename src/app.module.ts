@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { SwipeModule } from './swipe/swipe.module';
+import { MatchModule } from './match/match.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { SwipeModule } from './swipe/swipe.module';
     PrismaModule, 
     AdminModule,
     DiscoveryModule,
-    SwipeModule
+    SwipeModule,
+    MatchModule
   ],
   providers: [AppService],
 })
