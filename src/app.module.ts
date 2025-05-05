@@ -7,6 +7,7 @@ import { PddiktiModule } from './pddikti/pddikti.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AdminModule } from './admin/admin.module';
 import { DiscoveryModule } from './discovery/discovery.module';
+import { SwipeModule } from './swipe/swipe.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { DiscoveryModule } from './discovery/discovery.module';
     PddiktiModule,
     PrismaModule, 
     AdminModule,
-    DiscoveryModule
+    DiscoveryModule,
+    SwipeModule
   ],
   providers: [AppService],
 })
