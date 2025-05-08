@@ -20,6 +20,10 @@ enum Gender {
   ALL
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
 // --- Authentication & Basic User ---
 
 model Token {
@@ -51,6 +55,7 @@ model User {
   interests      UserInterest[]
   lastOnline     DateTime? @default(now()) // Keep track of activity
   verified       Boolean?  @default(false)
+  role           UserRole @default(USER) // Default to USER, can be ADMIN for admin users
   isActive       Boolean   @default(true) // To allow users to deactivate their profile temporarily
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
