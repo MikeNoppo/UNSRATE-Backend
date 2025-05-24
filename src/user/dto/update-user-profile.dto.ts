@@ -8,7 +8,9 @@ import {
   AddressProperty,
   GenderPreferenceProperty,
   MinAgePreferenceProperty,
-  MaxAgePreferenceProperty
+  MaxAgePreferenceProperty,
+  FakultasProperty,
+  ProdiProperty
 } from '../../decorators/user/user-property.decorators';
 
 export class UpdateUserProfileDto {
@@ -32,6 +34,12 @@ export class UpdateUserProfileDto {
 
   @AddressProperty()
   alamat?: string;
+
+  @FakultasProperty()
+  fakultas?: string;
+
+  @ProdiProperty()
+  prodi?: string;
 
   @GenderPreferenceProperty()
   interestedInGender?: any;

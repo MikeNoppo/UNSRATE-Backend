@@ -140,6 +140,8 @@ export class UsersService {
         interestedInGender: true,
         minAgePreference: true,
         maxAgePreference: true,
+        fakultas: true,
+        prodi: true,
         // Exclude sensitive information
         email: false,
         password: false,

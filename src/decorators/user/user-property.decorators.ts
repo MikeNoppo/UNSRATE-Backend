@@ -211,3 +211,32 @@ export function RemovePhotosProperty() {
     IsString({ each: true })
   );
 }
+
+// Create a property decorator for fakultas and prodi
+export function FakultasProperty() {
+  return applyDecorators(
+    ApiProperty({
+      description: 'Nama fakultas',
+      example: 'Fakultas Ilmu Komputer',
+      required: false,
+      maxLength: 100,
+    }),
+    IsOptional(),
+    IsString(),
+    MaxLength(100)
+  );
+}
+
+export function ProdiProperty() {
+  return applyDecorators(
+    ApiProperty({
+      description: 'Program studi (prodi)',
+      example: 'Teknik Informatika',
+      required: false,
+      maxLength: 100,
+    }),
+    IsOptional(),
+    IsString(),
+    MaxLength(100)
+  );
+}
