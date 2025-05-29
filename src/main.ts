@@ -6,6 +6,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import multipart from 'fastify-multipart';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -25,6 +26,13 @@ async function bootstrap() {
     whitelist: true,
     transform: true,
   }));
+
+  app.register(multipart, {
+    attachFieldsToBody: true,
+    limits: {
+      fileSize: 60 * 1024 * 1024, // 60 MB
+    },
+  });
 
   // Setup Swagger documentation
   const config = new DocumentBuilder()

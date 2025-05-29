@@ -7,10 +7,64 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
 import { GetUserProfileResponseDto, UserProfileDto } from './dto/get-userProfile.dto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { ConfigService } from '@nestjs/config';
+
+// Helper function to generate a unique file name
+function generateUniqueFileName(originalname: string): string {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  const extension = originalname.split('.').pop();
+  return `${timestamp}-${randomString}.${extension}`;
+}
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private supabase: SupabaseClient;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    // Initialize Supabase client
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and Key must be provided in environment variables');
+    }
+    this.supabase = createClient(supabaseUrl, supabaseKey);
+  }
+
+  // Method to save file to Supabase Storage and get URL
+  private async saveFileToSupabaseAndGetUrl(file: Express.Multer.File): Promise<string> {
+    const uniqueFileName = generateUniqueFileName(file.originalname);
+    const filePath = `user-photos/${uniqueFileName}`; // Define a path/bucket in Supabase
+
+    const { data, error } = await this.supabase.storage
+      .from('photos') // Replace 'photos' with your Supabase bucket name
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false, // true to overwrite existing file with same name
+      });
+
+    if (error) {
+      console.error('Error uploading to Supabase:', error);
+      throw new BadRequestException('Failed to upload photo.');
+    }
+
+    // Construct the public URL. Adjust if you have RLS policies or different URL structure.
+    // This typically is: SUPABASE_URL/storage/v1/object/public/BUCKET_NAME/FILE_PATH
+    const { data: publicUrlData } = this.supabase.storage
+      .from('photos') // Replace 'photos' with your Supabase bucket name
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData || !publicUrlData.publicUrl) {
+        console.error('Error getting public URL from Supabase for:', filePath);
+        throw new BadRequestException('Failed to get photo URL after upload.');
+    }
+    
+    return publicUrlData.publicUrl;
+  }
 
   async getUserProfile(userId: string): Promise<GetUserProfileResponseDto> {
     // Validasi User ID
@@ -147,7 +201,7 @@ export class UsersService {
     });
   }
 
-  async manageUserPhotos(userId: string, photosDto: ManageUserPhotosDto) {
+  async manageUserPhotos(userId: string, photosDto: ManageUserPhotosDto, files?: Array<Express.Multer.File>) {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -166,13 +220,14 @@ export class UsersService {
     const currentPhotos = user.Photos || [];
     let updatedPhotos = [...currentPhotos];
 
-    // Add new photos
-    if (photosDto.addPhotos && photosDto.addPhotos.length > 0) {
-      // Filter out duplicates (photos that already exist)
-      const newPhotos = photosDto.addPhotos.filter(
-        (photo) => !updatedPhotos.includes(photo),
+    // Add new photos from uploaded files
+    if (files && files.length > 0) {
+      const newPhotoUrls = await Promise.all(files.map(file => this.saveFileToSupabaseAndGetUrl(file)));
+      // Filter out duplicates (photos that already exist based on URL - simplistic check)
+      const uniqueNewPhotos = newPhotoUrls.filter(
+        (url) => !updatedPhotos.includes(url),
       );
-      updatedPhotos = [...updatedPhotos, ...newPhotos];
+      updatedPhotos = [...updatedPhotos, ...uniqueNewPhotos];
     }
 
     // Remove photos
