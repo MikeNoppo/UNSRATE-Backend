@@ -1,11 +1,23 @@
-import { Controller, Patch, Body, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Body,
+  UseGuards,
+  Get,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { UsersService } from './user.service';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
+// import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiUpdateUserProfile, ApiManageUserPhotos } from '../decorators/user/user-swagger.decorators';
+import {
+  ApiUpdateUserProfile,
+  ApiManageUserPhotos,
+} from '../decorators/user/user-swagger.decorators';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('users')
 @Controller('users')
@@ -14,10 +26,10 @@ export class UsersController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  async getUserProfile(@User('id') userid : string) {
+  async getUserProfile(@User('id') userid: string) {
     return this.usersService.getUserProfile(userid);
   }
-  
+
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   @ApiUpdateUserProfile()
@@ -28,13 +40,13 @@ export class UsersController {
     return this.usersService.updateUserProfile(userId, updateProfileDto);
   }
 
-  @Patch('photos')
+  @Patch('photo')
   @UseGuards(JwtAuthGuard)
-  @ApiManageUserPhotos()
-  async managePhotos(
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadProfilePhoto(
     @User('id') userId: string,
-    @Body() photosDto: ManageUserPhotosDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.usersService.manageUserPhotos(userId, photosDto);
+    return this.usersService.uploadProfilePhoto(userId, file);
   }
 }

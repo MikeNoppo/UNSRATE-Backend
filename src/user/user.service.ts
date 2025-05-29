@@ -208,4 +208,33 @@ export class UsersService {
       },
     });
   }
+
+  private async uploadToStorage(file: Express.Multer.File): Promise<string> {
+  return `https://bvfgbtpd-2020.asse.devtunnels.ms/${file.originalname}`;
+}
+
+  async uploadProfilePhoto(userId: string, file: Express.Multer.File) {
+  if (!file) {
+    throw new BadRequestException('No file uploaded');
+  }
+
+  // Misal upload ke cloud storage, lalu dapat URL:
+  const uploadedUrl = await this.uploadToStorage(file); // Simulasi upload
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: {
+      profilePicture: uploadedUrl,
+      Photos: {
+        push: uploadedUrl
+      }
+    },
+    select: {
+      id: true,
+      profilePicture: true,
+      Photos: true,
+    }
+  });
+}
+
 }
