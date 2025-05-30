@@ -1,3 +1,4 @@
+import { Gender } from '@prisma/client';
 import { 
   FullnameProperty,
   ProfilePictureProperty,
@@ -28,13 +29,13 @@ export class UpdateUserProfileDto {
   dateOfBirth?: string;
 
   @GenderProperty()
-  gender?: string; 
+  gender?: Gender;
 
   @AddressProperty()
   alamat?: string;
 
   @GenderPreferenceProperty()
-  interestedInGender?: string;
+  interestedInGender?: Gender;
 
   @MinAgePreferenceProperty()
   minAgePreference?: number;
