@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import { UsersModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
@@ -22,6 +21,6 @@ import { MatchModule } from './match/match.module';
     SwipeModule,
     MatchModule
   ],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

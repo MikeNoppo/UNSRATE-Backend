@@ -28,13 +28,13 @@ export class UpdateUserProfileDto {
   dateOfBirth?: string;
 
   @GenderProperty()
-  gender?: any; // Using any to avoid import issues with Gender enum
+  gender?: string; 
 
   @AddressProperty()
   alamat?: string;
 
   @GenderPreferenceProperty()
-  interestedInGender?: any;
+  interestedInGender?: string;
 
   @MinAgePreferenceProperty()
   minAgePreference?: number;
