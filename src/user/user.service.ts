@@ -11,10 +11,24 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 
 // Helper function to generate a unique file name
-function generateUniqueFileName(originalname: string): string {
+function generateUniqueFileName(originalFilename?: string): string {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 15);
-  const extension = originalname.split('.').pop();
+
+  // Handle cases where originalFilename might be undefined, null, or empty
+  const nameToProcess = originalFilename && originalFilename.trim() !== "" ? originalFilename : `unknownfile-${timestamp}`;
+  
+  const parts = nameToProcess.split('.');
+  let extension = 'jpg'; // Default extension
+
+  if (parts.length > 1) {
+    const lastPart = parts.pop();
+    // Ensure extension is a valid string and not excessively long (simple check)
+    if (lastPart && lastPart.trim() !== "" && lastPart.length < 10) { 
+      extension = lastPart;
+    }
+  }
+  
   return `${timestamp}-${randomString}.${extension}`;
 }
 
@@ -36,34 +50,51 @@ export class UsersService {
   }
 
   // Method to save file to Supabase Storage and get URL
-  private async saveFileToSupabaseAndGetUrl(file: Express.Multer.File): Promise<string> {
-    const uniqueFileName = generateUniqueFileName(file.originalname);
-    const filePath = `user-photos/${uniqueFileName}`; // Define a path/bucket in Supabase
+  private async saveFileToSupabaseAndGetUrl(file: any): Promise<string> {
+    if (!file.filename) {
+      throw new BadRequestException('Invalid file data: missing filename.');
+    }
+    if (!file.mimetype) {
+      throw new BadRequestException('Invalid file data: missing mimetype.');
+    }
+    if (typeof file.toBuffer !== 'function') {
+      throw new BadRequestException('Invalid file data: missing toBuffer method.');
+    }
 
-    const { data, error } = await this.supabase.storage
-      .from('photos') // Replace 'photos' with your Supabase bucket name
-      .upload(filePath, file.buffer, {
+    const uniqueFileName = generateUniqueFileName(file.filename);
+    const filePath = `${uniqueFileName}`;
+
+    let uploadSource: Buffer;
+    try {
+      uploadSource = await file.toBuffer();
+    } catch {
+      throw new BadRequestException(`Failed to process file buffer for ${file.filename}.`);
+    }
+
+    if (!uploadSource || uploadSource.length === 0) {
+      throw new BadRequestException(`File buffer for ${file.filename} is empty or could not be retrieved.`);
+    }
+
+    const { data, error: uploadError } = await this.supabase.storage
+      .from('user-photos')
+      .upload(filePath, uploadSource, {
         contentType: file.mimetype,
-        upsert: false, // true to overwrite existing file with same name
+        upsert: false,
       });
 
-    if (error) {
-      console.error('Error uploading to Supabase:', error);
-      throw new BadRequestException('Failed to upload photo.');
+    if (uploadError) {
+      throw new BadRequestException(`Failed to upload photo ${file.filename}. Supabase error: ${uploadError.message}`);
     }
 
-    // Construct the public URL. Adjust if you have RLS policies or different URL structure.
-    // This typically is: SUPABASE_URL/storage/v1/object/public/BUCKET_NAME/FILE_PATH
-    const { data: publicUrlData } = this.supabase.storage
-      .from('photos') // Replace 'photos' with your Supabase bucket name
+    const publicUrlData = this.supabase.storage
+      .from('user-photos')
       .getPublicUrl(filePath);
 
-    if (!publicUrlData || !publicUrlData.publicUrl) {
-        console.error('Error getting public URL from Supabase for:', filePath);
-        throw new BadRequestException('Failed to get photo URL after upload.');
+    if (!publicUrlData || !publicUrlData.data || !publicUrlData.data.publicUrl) {
+      throw new BadRequestException(`Failed to get a valid photo URL for ${file.filename} after upload.`);
     }
-    
-    return publicUrlData.publicUrl;
+
+    return publicUrlData.data.publicUrl;
   }
 
   async getUserProfile(userId: string): Promise<GetUserProfileResponseDto> {
@@ -201,52 +232,65 @@ export class UsersService {
     });
   }
 
-  async manageUserPhotos(userId: string, photosDto: ManageUserPhotosDto, files?: Array<Express.Multer.File>) {
-    // Check if user exists
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        Photos: true,
-        profilePicture: true,
-      },
-    });
+  async manageUserPhotos(userId: string, photosDto: ManageUserPhotosDto, filesFromController?: any[]) {
+    let filesToProcess: any[] = Array.isArray(filesFromController)
+      ? filesFromController
+      : filesFromController
+      ? [filesFromController]
+      : [];
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    // Normalisasi removePhotos agar selalu array of string
+    if (photosDto.removePhotos) {
+      if (!Array.isArray(photosDto.removePhotos)) {
+        const remove = photosDto.removePhotos as any;
+        if (typeof remove === 'object' && remove !== null && 'value' in remove) {
+          photosDto.removePhotos = Array.isArray(remove.value) ? remove.value : [remove.value];
+        } else if (typeof remove === 'string') {
+          photosDto.removePhotos = [remove];
+        } else {
+          photosDto.removePhotos = [];
+        }
+      }
+    } else {
+      photosDto.removePhotos = [];
     }
 
-    // Initialize current photos array
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, Photos: true, profilePicture: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
     const currentPhotos = user.Photos || [];
     let updatedPhotos = [...currentPhotos];
 
-    // Add new photos from uploaded files
-    if (files && files.length > 0) {
-      const newPhotoUrls = await Promise.all(files.map(file => this.saveFileToSupabaseAndGetUrl(file)));
-      // Filter out duplicates (photos that already exist based on URL - simplistic check)
-      const uniqueNewPhotos = newPhotoUrls.filter(
-        (url) => !updatedPhotos.includes(url),
-      );
+    if (filesToProcess.length > 0) {
+      const newPhotoUrls: string[] = [];
+      for (const filePart of filesToProcess) {
+        const url = await this.saveFileToSupabaseAndGetUrl(filePart);
+        newPhotoUrls.push(url);
+      }
+      const uniqueNewPhotos = newPhotoUrls.filter((url) => !updatedPhotos.includes(url));
       updatedPhotos = [...updatedPhotos, ...uniqueNewPhotos];
     }
 
-    // Remove photos
+    // Remove photos (hanya hapus dari array, tidak hapus file di storage)
     if (photosDto.removePhotos && photosDto.removePhotos.length > 0) {
-      updatedPhotos = updatedPhotos.filter(
-        (photo) => !photosDto.removePhotos.includes(photo),
-      );
-      
-      // Check if trying to remove profile picture
-      if (photosDto.removePhotos.includes(user.profilePicture)) {
-        // If no profilePicture provided in the DTO, this will reset it
+      const removeList = (photosDto.removePhotos as any[])
+        .filter((p) => typeof p === 'string')
+        .map((p) => decodeURI(p.trim()));
+      updatedPhotos = updatedPhotos.filter((photo) => {
+        if (typeof photo !== 'string') return true;
+        const normalizedPhoto = decodeURI(photo.trim());
+        return !removeList.includes(normalizedPhoto);
+      });
+      if (removeList.includes(user.profilePicture ? decodeURI(user.profilePicture.trim()) : '')) {
         if (!photosDto.profilePicture) {
-          // Set to first available photo or null if no photos left
           photosDto.profilePicture = updatedPhotos.length > 0 ? updatedPhotos[0] : null;
         }
       }
     }
 
-    // Update user with new photo data
     return this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -260,5 +304,110 @@ export class UsersService {
         Photos: true,
       },
     });
+  }
+
+  async deleteUserPhoto(userId: string, photoUrl: string) {
+    if (!photoUrl || typeof photoUrl !== 'string') {
+      throw new BadRequestException('photoUrl is required and must be a string');
+    }
+    // Cari user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { Photos: true, profilePicture: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    // Normalisasi URL
+    const normalizedUrl = decodeURI(photoUrl.trim());
+    // Hapus file dari Supabase
+    const match = normalizedUrl.match(/user-photos\/(.*)$/);
+    if (match && match[1]) {
+      const filePath = match[1];
+      await this.supabase.storage.from('user-photos').remove([filePath]);
+    }
+    // Hapus dari array Photos
+    const updatedPhotos = (user.Photos || []).filter((p) => {
+      if (typeof p !== 'string') return true;
+      return decodeURI(p.trim()) !== normalizedUrl;
+    });
+    // Update profilePicture jika perlu
+    let newProfilePicture = user.profilePicture;
+    if (user.profilePicture && decodeURI(user.profilePicture.trim()) === normalizedUrl) {
+      newProfilePicture = updatedPhotos.length > 0 ? updatedPhotos[0] : null;
+    }
+    // Simpan perubahan
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        Photos: updatedPhotos,
+        profilePicture: newProfilePicture,
+      },
+      select: {
+        id: true,
+        fullname: true,
+        profilePicture: true,
+        Photos: true,
+      },
+    });
+  }
+
+  async setUserProfilePicture(userId: string, body: any, req: any) {
+    // Jika remove true, hapus profilePicture
+    if (body.remove) {
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: { profilePicture: null },
+        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+      });
+    }
+
+    // Jika photoUrl ada, set profilePicture dari Photos
+    if (body.photoUrl && typeof body.photoUrl === 'string') {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { Photos: true },
+      });
+      if (!user) throw new NotFoundException('User not found');
+      const normalizedUrl = decodeURI(body.photoUrl.trim());
+      const exists = (user.Photos || []).some(
+        (p) => typeof p === 'string' && decodeURI(p.trim()) === normalizedUrl
+      );
+      if (!exists) throw new BadRequestException('photoUrl is not in Photos array');
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: { profilePicture: normalizedUrl },
+        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+      });
+    }
+
+    // Jika ada file upload, upload ke Supabase dan set profilePicture
+    let filePart = null;
+    // Cek form-data (Fastify multipart) di req.body.files atau req.files()
+    if (body && body.files) {
+      filePart = Array.isArray(body.files) ? body.files[0] : body.files;
+    } else if (req && req.files && typeof req.files === 'function') {
+      for await (const part of req.files()) {
+        if (part && part.file) {
+          filePart = part;
+          break;
+        }
+      }
+    }
+    if (filePart) {
+      const url = await this.saveFileToSupabaseAndGetUrl(filePart);
+      // Tambahkan ke Photos jika belum ada
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { Photos: true },
+      });
+      let updatedPhotos = user?.Photos || [];
+      if (!updatedPhotos.includes(url)) updatedPhotos = [...updatedPhotos, url];
+      return this.prisma.user.update({
+        where: { id: userId },
+        data: { profilePicture: url, Photos: updatedPhotos },
+        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+      });
+    }
+
+    throw new BadRequestException('No valid photoUrl, file upload, or remove flag provided');
   }
 }

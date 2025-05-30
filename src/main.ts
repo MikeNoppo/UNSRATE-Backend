@@ -6,7 +6,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import multipart from 'fastify-multipart';
+import multipart from '@fastify/multipart';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -25,9 +25,14 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
+    transformOptions: {
+      enableImplicitConversion: true, // Helps with basic type conversions
+      // strategy: 'exposeAll', // Uncomment if you use @Exclude or @Expose extensively and need to control transformation
+    },
+    // forbidNonWhitelisted: true, // Consider adding this for stricter validation later
   }));
 
-  app.register(multipart, {
+  await app.register(multipart, {
     attachFieldsToBody: true,
     limits: {
       fileSize: 60 * 1024 * 1024, // 60 MB
