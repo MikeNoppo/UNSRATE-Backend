@@ -203,15 +203,41 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Build nested update for interests
+    let interestsUpdate: any = undefined;
+    if (updateProfileDto.setInterests) {
+      interestsUpdate = {
+        set: updateProfileDto.setInterests.map(interestId => ({ interestId, userId })),
+      };
+    } else {
+      interestsUpdate = {};
+      if (updateProfileDto.addInterests) {
+        interestsUpdate.connect = updateProfileDto.addInterests.map(interestId => ({ interestId, userId }));
+      }
+      if (updateProfileDto.removeInterests) {
+        interestsUpdate.disconnect = updateProfileDto.removeInterests.map(interestId => ({ interestId, userId }));
+      }
+      if (Object.keys(interestsUpdate).length === 0) interestsUpdate = undefined;
+    }
+
+    // Prepare update data, remove interest fields from spread
+    const {
+      addInterests,
+      removeInterests,
+      setInterests,
+      ...otherFields
+    } = updateProfileDto;
+
     // Update user profile
     return this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...updateProfileDto,
+        ...otherFields,
         // Convert dateOfBirth string to Date if provided
         dateOfBirth: updateProfileDto.dateOfBirth
           ? new Date(updateProfileDto.dateOfBirth)
           : undefined,
+        ...(interestsUpdate ? { interests: interestsUpdate } : {}),
       },
       select: {
         id: true,
@@ -221,7 +247,21 @@ export class UsersService {
         bio: true,
         dateOfBirth: true,
         gender: true,
+        fakultas: true,
+        prodi: true,
+        age: true,
         alamat: true,
+        verified: true,
+        interests: {
+          select: {
+            interest: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         interestedInGender: true,
         minAgePreference: true,
         maxAgePreference: true,
