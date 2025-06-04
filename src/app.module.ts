@@ -8,6 +8,7 @@ import { AdminModule } from './admin/admin.module';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { SwipeModule } from './swipe/swipe.module';
 import { MatchModule } from './match/match.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { MatchModule } from './match/match.module';
     AdminModule,
     DiscoveryModule,
     SwipeModule,
-    MatchModule
+    MatchModule,
+    ChatModule
   ],
   providers: [],
 })
