@@ -11,8 +11,6 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get('match/:matchId/messages')
-  @ApiOperation({ summary: 'Get all messages for a specific match' })
-  @ApiParam({ name: 'matchId', description: 'The ID of the match', type: String })
   async getMessagesForMatch(@Param('matchId') matchId: string, @Req() req) {
     const userId = req.user.id;
     await this.chatService.validateUserInMatch(userId, matchId); 

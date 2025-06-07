@@ -49,16 +49,30 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   // handleConnection is now primarily for post-authentication logic
-  // WsJwtGuard handles the authentication and attaches client.data.user
+  // WsJwtGuard handles the authentication and attaches user to client.handshake.auth.user
   async handleConnection(client: Socket) {
     this.logger.log(`[ChatGateway][${client.id}] handleConnection invoked.`);
-    this.logger.log(`[ChatGateway][${client.id}] Inspecting client.data. Type: ${typeof client.data}, Value: ${JSON.stringify(client.data)}`);
-
-    if (client.data && typeof client.data === 'object' && client.data.user && client.data.user.sub) {
-      this.logger.log(`[ChatGateway][${client.id}] User data found in client.data. User ID: ${client.data.user.sub}`);
-      // Additional connection logic after successful authentication can go here
+    // Parse token from handshake again
+    const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.split(' ')[1];
+    let user = undefined;
+    if (token) {
+      try {
+        const jwtService = this.configService.get<any>('JwtService') || require('@nestjs/jwt').JwtService;
+        const jwtSecret = this.configService.get<string>('JWT_SECRET');
+        // Use a new JwtService instance if not injected
+        const jwt = new jwtService({ secret: jwtSecret });
+        user = jwt.verify(token, { secret: jwtSecret });
+        this.logger.log(`[ChatGateway][${client.id}] User verified from token: ${JSON.stringify(user)}`);
+      } catch (e) {
+        this.logger.warn(`[ChatGateway][${client.id}] Token verification failed: ${e.message}`);
+      }
+    }
+    if (user && user.sub) {
+      this.logger.log(`[ChatGateway][${client.id}] User data found from token. User ID: ${user.sub}`);
+      (client as any).user = user; // Attach for use in other handlers
     } else {
-      this.logger.warn(`[ChatGateway][${client.id}] User data NOT found or incomplete in client.data. Current client.data.user: ${JSON.stringify(client.data?.user)}. Full client.data: ${JSON.stringify(client.data)}`);
+      this.logger.warn(`[ChatGateway][${client.id}] User data NOT found or incomplete from token. Token: ${token}`);
+      client.disconnect(true);
     }
   }
 
@@ -69,25 +83,26 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('joinMatchRoom')
   handleJoinRoom(@MessageBody('matchId') matchId: string, @ConnectedSocket() client: Socket) {
-    if (!client.data.user) {
-      this.logger.warn(`Unauthorized attempt to join room by ${client.id}`);
+    const user = (client as any).user;
+    if (!user || !user.sub) {
+      this.logger.warn(`Unauthorized attempt to join room by ${client.id}. User: ${JSON.stringify(user)}`);
       return { event: 'error', data: 'Unauthorized' };
     }
     client.join(matchId);
-    this.logger.log(`User ${client.data.user.sub} (Client ${client.id}) joined room: ${matchId}`);
-    // Optionally, acknowledge room join
+    this.logger.log(`User ${user.sub} (Client ${client.id}) joined room: ${matchId}`);
     client.emit('joinedRoom', { matchId }); 
     return { event: 'joinedRoom', data: { matchId } };
   }
 
   @SubscribeMessage('leaveMatchRoom')
   handleLeaveRoom(@MessageBody('matchId') matchId: string, @ConnectedSocket() client: Socket) {
-    if (!client.data.user) {
-      this.logger.warn(`Unauthorized attempt to leave room by ${client.id}`);
+    const user = (client as any).user;
+    if (!user || !user.sub) {
+      this.logger.warn(`Unauthorized attempt to leave room by ${client.id}. User: ${JSON.stringify(user)}`);
       return { event: 'error', data: 'Unauthorized' };
     }
     client.leave(matchId);
-    this.logger.log(`User ${client.data.user.sub} (Client ${client.id}) left room: ${matchId}`);
+    this.logger.log(`User ${user.sub} (Client ${client.id}) left room: ${matchId}`);
     return { event: 'leftRoom', data: { matchId } };
   }
 
@@ -95,13 +110,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   async handleMessage(
     @MessageBody(ValidationPipe) payload: IncomingMessageDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<void> { // Return type can be void or an ack payload
-    if (!client.data.user) {
-      this.logger.warn(`Unauthorized message attempt by ${client.id}`);
-      // client.emit('error', { message: 'Unauthorized' }); // Send error back to sender
+  ): Promise<void> { 
+    const user = (client as any).user;
+    if (!user || !user.sub) {
+      this.logger.warn(`Unauthorized message attempt by ${client.id}. User: ${JSON.stringify(user)}`);
       return; 
     }
-    const senderId = client.data.user.sub; // Assuming 'sub' is the user ID in JWT payload
+    const senderId = user.sub; 
     this.logger.log(
       `Message from User ${senderId} (Client ${client.id}) to Match ${payload.matchId}: ${payload.content}`,
     );
@@ -125,9 +140,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         isRead: savedMessage.isRead,
         // Include sender details if needed, fetched from client.data.user or another service call
         sender: {
-            id: client.data.user.sub,
-            fullname: client.data.user.fullname, // Assuming fullname is in JWT or client.data
-            // profilePicture: client.data.user.profilePicture
+            id: user.sub,
+            fullname: user.fullname, 
+            // profilePicture: user.profilePicture
         }
       };
 

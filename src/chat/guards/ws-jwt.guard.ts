@@ -34,17 +34,10 @@ export class WsJwtGuard implements CanActivate {
         throw new Error('JWT_SECRET is not configured.');
       }
       const payload = this.jwtService.verify(token, { secret });
-      this.logger.log(`[WsJwtGuard][${client.id}] Payload verified: ${JSON.stringify(payload)}`);
-      
-      client.data = client.data || {}; // Ensure client.data is an object
-      client.data.user = payload; 
-      this.logger.log(`[WsJwtGuard][${client.id}] client.data after assignment: ${JSON.stringify(client.data)}`);
-      
-      if (client.data.user && client.data.user.sub) {
-        this.logger.log(`[WsJwtGuard][${client.id}] Authentication successful for user: ${client.data.user.sub}`);
+      if (payload && payload.sub) {
         return true;
       } else {
-        this.logger.error(`[WsJwtGuard][${client.id}] FATAL: Payload verified but client.data.user or client.data.user.sub is missing post-assignment. Payload: ${JSON.stringify(payload)}, client.data.user: ${JSON.stringify(client.data.user)}`);
+        this.logger.error(`[WsJwtGuard][${client.id}] FATAL: Payload verified but missing sub. Payload: ${JSON.stringify(payload)}`);
         client.disconnect(true);
         return false;
       }
