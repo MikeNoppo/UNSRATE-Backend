@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -12,7 +12,7 @@ import { ListUsersResponseDto } from './dto/list-users-response.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService) { }
 
   @Get('dashboard/stats')
   @ApiDashboardStats()
@@ -24,5 +24,10 @@ export class AdminController {
   @ApiListUsers()
   async listUsers(@Query() query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
     return this.adminService.listUsers(query);
+  }
+
+  @Post('verify')
+  async verifyUser(@Body('userId') userId: string) {
+    return this.adminService.verifyUser(userId);
   }
 }

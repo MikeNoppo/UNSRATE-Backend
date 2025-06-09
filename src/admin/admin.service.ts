@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
 import { ListUsersQueryDto, UserVerificationStatus } from './dto/list-users-query.dto';
@@ -6,17 +6,17 @@ import { AdminUserListItemDto, ListUsersResponseDto, PageInfoDto } from './dto/l
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getDashboardStats(): Promise<DashboardStatsResponseDto> {
     const totalUsers = await this.prisma.user.count();
     const verifiedUsers = await this.prisma.user.count({
       where: { verified: true },
     });
-    
+
     // Calculate verification rate (as a percentage)
-    const verificationRate = totalUsers > 0 
-      ? Math.round((verifiedUsers / totalUsers) * 100) 
+    const verificationRate = totalUsers > 0
+      ? Math.round((verifiedUsers / totalUsers) * 100)
       : 0;
 
     return {
@@ -31,17 +31,17 @@ export class AdminService {
 
   async listUsers(query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
     const { status, hasReports, search, page, limit } = query;
-    
+
     // Build the where conditions for filtering
     const where: any = {};
-    
+
     // Apply verification status filter
     if (status === UserVerificationStatus.VERIFIED) {
       where.verified = true;
     } else if (status === UserVerificationStatus.PENDING) {
       where.verified = false;
     }
-    
+
     // Apply search filter if provided
     if (search) {
       where.OR = [
@@ -50,19 +50,19 @@ export class AdminService {
         { email: { contains: search, mode: 'insensitive' } }
       ];
     }
-    
+
     // Report filtering will be implemented in the future
     // if (hasReports) {
     //   where.reports = { some: {} };
     // }
-    
+
     // Count total matching records for pagination
     const total = await this.prisma.user.count({ where });
-    
+
     // Calculate pagination
     const skip = page * limit;
     const totalPages = Math.ceil(total / limit);
-    
+
     // Fetch users with pagination
     const users = await this.prisma.user.findMany({
       where,
@@ -82,24 +82,39 @@ export class AdminService {
       take: limit,
       orderBy: { createdAt: 'desc' }, // Most recent first
     });
-    
+
     // Map to response DTO format
     const userItems: AdminUserListItemDto[] = users.map(user => ({
       ...user,
       reportCount: 0, // Placeholder for future implementation
     }));
-    
+
     // Build page info
     const pageInfo: PageInfoDto = {
       currentPage: page,
       limit,
       totalPages,
     };
-    
+
     return {
       users: userItems,
       total,
       pageInfo,
     };
+  }
+
+  async verifyUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.verified) {
+      throw new BadRequestException('User is already verified');
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { verified: true }
+    });
   }
 }
