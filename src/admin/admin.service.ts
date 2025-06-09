@@ -103,6 +103,27 @@ export class AdminService {
     };
   }
 
+  async deleteUser(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    const deletedUser = await this.prisma.user.delete({
+      where:{ id: userId },
+    });
+
+    return {
+      status: '200',
+      messsage: 'User Succesfully deleted',
+      data: {
+        id: deletedUser.id,
+        fullname: deletedUser.fullname,
+        email: deletedUser.email
+      }
+    }
+  }
+
   async verifyUser(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {

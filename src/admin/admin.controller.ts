@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -24,6 +24,11 @@ export class AdminController {
   @ApiListUsers()
   async listUsers(@Query() query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
     return this.adminService.listUsers(query);
+  }
+
+  @Delete('user')
+  async deleteUser(@Body('userId') userId: string){
+    return this.adminService.deleteUser(userId);
   }
 
   @Post('verify')
