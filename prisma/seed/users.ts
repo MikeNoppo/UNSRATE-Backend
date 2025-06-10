@@ -15,30 +15,31 @@ const faculties = [
 /**
  * Generate and create university student users
  */
-export async function seedUsers(prisma: PrismaClient, count = 50) {
-  const hashedPassword = await bcrypt.hash('password123', 10);
+export async function seedUsers(prisma: PrismaClient, count = 10) {
+  const hashedPassword = await bcrypt.hash('123456', 10);
   const users = [];
   
   console.log(`Generating ${count} users...`);
   
-  for (let i = 0; i < count; i++) {
-    const gender = faker.helpers.arrayElement([Gender.MALE, Gender.FEMALE]);
+  // Create 5 male users
+  for (let i = 0; i < count / 2; i++) {
+    const gender = Gender.MALE;
     const faculty = faker.helpers.arrayElement(faculties);
     const program = faker.helpers.arrayElement(faculty.programs);
     const birthYear = faker.number.int({ min: 1998, max: 2005 });
     const birthDate = new Date(birthYear, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 }));
     const age = new Date().getFullYear() - birthYear;
     
-    // Generate a unique 10-digit NIM (Student ID)
-    const nim = `20${faker.string.numeric(8)}`;
-    
+    const nim = `M${faker.string.numeric(9)}`;
+    const email = `test${users.length + 1}@gmail.com`; // MODIFIED: Simplified email
+
     users.push({
-      fullname: faker.person.fullName({ sex: gender === Gender.MALE ? 'male' : 'female' }),
+      fullname: faker.person.fullName({ sex: 'male' }),
       nim,
-      email: `${nim}@student.university.ac.id`,
+      email, // MODIFIED: Use simplified email
       password: hashedPassword,
-      profilePicture: faker.image.avatar(),
-      Photos: [faker.image.urlLoremFlickr({ category: 'people' }), faker.image.urlLoremFlickr({ category: 'people' })],
+      profilePicture: null,
+      Photos: [],
       bio: faker.helpers.maybe(() => faker.lorem.paragraph(1), { probability: 0.7 }),
       fakultas: faculty.name,
       prodi: program,
@@ -46,7 +47,41 @@ export async function seedUsers(prisma: PrismaClient, count = 50) {
       age,
       gender,
       alamat: faker.location.streetAddress(),
-      interestedInGender: faker.helpers.arrayElement([Gender.MALE, Gender.FEMALE, Gender.ALL]),
+      interestedInGender: Gender.FEMALE,
+      minAgePreference: faker.helpers.maybe(() => faker.number.int({ min: 18, max: 23 }), { probability: 0.7 }),
+      maxAgePreference: faker.helpers.maybe(() => faker.number.int({ min: 19, max: 25 }), { probability: 0.7 }),
+      verified: true,
+      isActive: true
+    });
+  }
+
+  // Create 5 female users
+  for (let i = 0; i < count / 2; i++) {
+    const gender = Gender.FEMALE;
+    const faculty = faker.helpers.arrayElement(faculties);
+    const program = faker.helpers.arrayElement(faculty.programs);
+    const birthYear = faker.number.int({ min: 1998, max: 2005 });
+    const birthDate = new Date(birthYear, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 }));
+    const age = new Date().getFullYear() - birthYear;
+    
+    const nim = `F${faker.string.numeric(9)}`;
+    const email = `test${users.length + 1}@gmail.com`; // MODIFIED: Simplified email
+    
+    users.push({
+      fullname: faker.person.fullName({ sex: 'female' }),
+      nim,
+      email, // MODIFIED: Use simplified email
+      password: hashedPassword,
+      profilePicture: null,
+      Photos: [],
+      bio: faker.helpers.maybe(() => faker.lorem.paragraph(1), { probability: 0.7 }),
+      fakultas: faculty.name,
+      prodi: program,
+      dateOfBirth: birthDate,
+      age,
+      gender,
+      alamat: faker.location.streetAddress(),
+      interestedInGender: Gender.MALE,
       minAgePreference: faker.helpers.maybe(() => faker.number.int({ min: 18, max: 23 }), { probability: 0.7 }),
       maxAgePreference: faker.helpers.maybe(() => faker.number.int({ min: 19, max: 25 }), { probability: 0.7 }),
       verified: true,
