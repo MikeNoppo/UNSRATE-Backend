@@ -75,8 +75,8 @@ model User {
   // --- Potential Future Relations ---
   // blocksMade     Block[] @relation("Blocker")
   // blocksReceived Block[] @relation("Blocked")
-  // reportsMade    Report[] @relation("Reporter")
-  // reportsReceived Report[] @relation("Reported")
+  reportsMade    Report[] @relation("ReportsMade")
+  reportsReceived Report[] @relation("ReportsReceived")
 }
 
 model Interest{
@@ -173,15 +173,19 @@ model Message {
 //   @@unique([blockerId, blockedId])
 // }
 
-// model Report {
-//   id          String @id @default(cuid())
-//   reporterId  String // User who made the report
-//   reportedId  String // User who was reported
-//   reason      String // Reason for the report
-//   createdAt   DateTime @default(now())
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String   // ID user yang membuat laporan
+  reportedId  String   // ID user yang dilaporkan
+  
+  // Alasan laporan dalam bentuk teks bebas
+  reason      String   
+  
+  createdAt   DateTime @default(now())
 
-//   reporter User @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-//   reported User @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+  // Relasi
+  reporter    User     @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User     @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
 
-//   @@index([reportedId]) // Admins might query reports against a specific user
-// }
+  @@index([reportedId]) // Penting untuk query admin
+}

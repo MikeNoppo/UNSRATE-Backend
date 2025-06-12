@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -20,7 +19,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { fullname, nim, email, password, age, gender } = registerDto;
+    const { fullname, nim, email, password, age, gender, role } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
@@ -45,7 +44,8 @@ export class AuthService {
         password: hashedPassword,
         age,
         verified: false,
-        gender
+        gender,
+        role, 
       },
       select: {
         id: true,
@@ -54,7 +54,7 @@ export class AuthService {
     });
 
     // Generate tokens for auto login after registration
-    const tokens = await this.generateTokens(user.id, nim, gender);
+    const tokens = await this.generateTokens(user.id, nim, gender, role); 
 
     // Return the formatted response
     return {
@@ -86,7 +86,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     // Generate tokens
-    const accessToken = this.generateAccessToken(user.id, user.nim, user.gender); 
+    const accessToken = this.generateAccessToken(user.id, user.nim, user.gender, user.role);
     // Generate refresh token (pastikan unik)
     let refreshToken: string;
     let isUnique = false;
@@ -193,9 +193,9 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(userId: string, nim: string, gender: any) {
+  private async generateTokens(userId: string, nim: string, gender: any, role?: string) {
     // Generate access token
-    const accessToken = this.generateAccessToken(userId, nim, gender); 
+    const accessToken = this.generateAccessToken(userId, nim, gender, role); 
 
     // Generate refresh token
     let refreshToken: string;
@@ -241,10 +241,13 @@ export class AuthService {
     };
   }
 
-  private generateAccessToken(userId: string, nim: string, gender: any) { 
+  private generateAccessToken(userId: string, nim: string, gender: any, role?: string) {
     const payload: any = { sub: userId, nim };
     if (gender) {
       payload.gender = gender;
+    }
+    if (role) {
+      payload.role = role;
     }
     return this.jwtService.sign(payload);
   }

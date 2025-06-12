@@ -1,4 +1,4 @@
-import { Gender } from '@prisma/client';
+import { Gender, UserRole } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEmail,
@@ -43,4 +43,6 @@ export class RegisterDto {
   @Type(() => Number)
   @IsNumber()
   age: number;
+
+  role?: UserRole;
 }

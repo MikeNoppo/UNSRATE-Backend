@@ -10,6 +10,7 @@ import { SwipeModule } from './swipe/swipe.module';
 import { MatchModule } from './match/match.module';
 import { ChatModule } from './chat/chat.module';
 import { InterestModule } from './interest/interest.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { InterestModule } from './interest/interest.module';
     MatchModule,
     ChatModule,
     InterestModule,
+    ReportModule,
   ],
   providers: [],
 })
