@@ -15,7 +15,7 @@ export class InterestController {
   constructor(private readonly interestService: InterestService) {}
 
   @Get()
-  @UseGuards(JwtAuthGuard) // Protect this route
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all available interests' })
   @ApiOkResponse({
