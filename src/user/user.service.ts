@@ -242,73 +242,95 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Build nested update for interests
-    let interestsUpdatePayload: any = undefined;
+    const { addInterests, removeInterests, setInterests, ...otherProfileData } =
+      updateProfileDto;
 
-    if (
-      updateProfileDto.setInterests &&
-      Array.isArray(updateProfileDto.setInterests)
-    ) {
-      // If setInterests is provided, it defines the complete list of interests.
-      // Prisma will disconnect old UserInterest records not in the new set,
-      // and connect/create UserInterest records for the provided interestIds.
-      // The `userId` for UserInterest records is implicitly the current user's ID.
-      interestsUpdatePayload = {
-        set: updateProfileDto.setInterests.map((interestId: string) => ({
-          interestId: interestId, // Link to an existing Interest via its ID
-        })),
-      };
+    // 1. Handle setInterests (exclusive)
+    // This operation will replace all existing interests with the new set.
+    if (setInterests && Array.isArray(setInterests)) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          interests: {
+            deleteMany: {}, // Delete all existing UserInterest for this user
+            create: setInterests.map((interestId: string) => ({
+              interestId: interestId.trim(), // Link to an existing Interest via its ID
+            })),
+          },
+        },
+      });
     } else {
-      // Only process add/remove if setInterests is not provided
-      const operations: any = {};
+      // 2. Handle removeInterests if setInterests is not provided
       if (
-        updateProfileDto.addInterests &&
-        Array.isArray(updateProfileDto.addInterests) &&
-        updateProfileDto.addInterests.length > 0
+        removeInterests &&
+        Array.isArray(removeInterests) &&
+        removeInterests.length > 0
       ) {
-        // Create new UserInterest records for each interestId to be added.
-        // The `userId` is implicit. We only need to provide the `interestId`.
-        operations.create = updateProfileDto.addInterests.map((interestId: string) => ({
-          interestId: interestId, // Link to an existing Interest via its ID
-        }));
-      }
-      if (
-        updateProfileDto.removeInterests &&
-        Array.isArray(updateProfileDto.removeInterests) &&
-        updateProfileDto.removeInterests.length > 0
-      ) {
-        // Disconnect UserInterest records using their composite primary key.
-        operations.disconnect = updateProfileDto.removeInterests.map(
-          (interestId: string) => ({
-            userId_interestId: {
-              userId: userId,
-              interestId: interestId,
+        await this.prisma.userInterest.deleteMany({
+          where: {
+            userId: userId,
+            interestId: {
+              in: removeInterests.map((id) => id.trim()),
             },
-          }),
-        );
+          },
+        });
       }
-      if (Object.keys(operations).length > 0) {
-        interestsUpdatePayload = operations;
+
+      // 3. Handle addInterests if setInterests is not provided
+      if (
+        addInterests &&
+        Array.isArray(addInterests) &&
+        addInterests.length > 0
+      ) {
+        // Using nested create which handles connecting to existing Interest
+        // and creating the UserInterest join table record.
+        // Prisma's nested create on a many-to-many relation implicitly handles
+        // not creating duplicates if the link already exists.
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            interests: {
+              create: addInterests.map((interestId: string) => ({
+                interestId: interestId.trim(),
+              })),
+            },
+          },
+        });
       }
     }
 
-    // Prepare update data, remove interest fields from spread
-    const { addInterests, removeInterests, setInterests, ...otherFields } =
-      updateProfileDto;
+    // 4. Update other profile fields
+    const dataToUpdate: any = {};
+    let hasOtherFieldsToUpdate = false;
 
-    // Update user profile
-    return this.prisma.user.update({
+    // Populate dataToUpdate only with fields present in otherProfileData
+    for (const key in otherProfileData) {
+      if (Object.prototype.hasOwnProperty.call(otherProfileData, key)) {
+        // @ts-ignore
+        if (otherProfileData[key] !== undefined) {
+          // @ts-ignore
+          dataToUpdate[key] = otherProfileData[key];
+          hasOtherFieldsToUpdate = true;
+        }
+      }
+    }
+    
+    if (updateProfileDto.hasOwnProperty('dateOfBirth')) {
+        dataToUpdate.dateOfBirth = updateProfileDto.dateOfBirth ? new Date(updateProfileDto.dateOfBirth) : null;
+        hasOtherFieldsToUpdate = true;
+    }
+
+
+    if (hasOtherFieldsToUpdate) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: dataToUpdate,
+      });
+    }
+
+    // 5. Return the updated user profile with all changes reflected
+    return this.prisma.user.findUnique({
       where: { id: userId },
-      data: {
-        ...otherFields,
-        // Convert dateOfBirth string to Date if provided
-        dateOfBirth: updateProfileDto.dateOfBirth
-          ? new Date(updateProfileDto.dateOfBirth)
-          : undefined,
-        ...(interestsUpdatePayload
-          ? { interests: interestsUpdatePayload }
-          : {}),
-      },
       select: {
         id: true,
         fullname: true,
@@ -335,8 +357,7 @@ export class UsersService {
         interestedInGender: true,
         minAgePreference: true,
         maxAgePreference: true,
-        // Exclude sensitive information
-        email: false,
+        email: false, // Exclude sensitive information
         password: false,
       },
     });
