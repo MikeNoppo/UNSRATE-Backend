@@ -20,7 +20,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { fullname, nim, email, password, age } = registerDto;
+    const { fullname, nim, email, password, age, gender } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
@@ -45,6 +45,7 @@ export class AuthService {
         password: hashedPassword,
         age,
         verified: false,
+        gender
       },
       select: {
         id: true,
@@ -53,7 +54,7 @@ export class AuthService {
     });
 
     // Generate tokens for auto login after registration
-    const tokens = await this.generateTokens(user.id, nim);
+    const tokens = await this.generateTokens(user.id, nim, gender);
 
     // Return the formatted response
     return {
@@ -85,7 +86,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     // Generate tokens
-    const accessToken = this.generateAccessToken(user.id, user.nim);
+    const accessToken = this.generateAccessToken(user.id, user.nim, user.gender); 
     // Generate refresh token (pastikan unik)
     let refreshToken: string;
     let isUnique = false;
@@ -157,6 +158,7 @@ export class AuthService {
         select: {
           id: true,
           nim: true,
+          gender: true,
         },
       });
 
@@ -165,7 +167,7 @@ export class AuthService {
       }
 
       // Generate new access token only
-      const accessToken = this.generateAccessToken(user.id, user.nim);
+      const accessToken = this.generateAccessToken(user.id, user.nim, user.gender);
 
       return {
         status: 200,
@@ -191,9 +193,9 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(userId: string, nim: string) {
+  private async generateTokens(userId: string, nim: string, gender: any) {
     // Generate access token
-    const accessToken = this.generateAccessToken(userId, nim);
+    const accessToken = this.generateAccessToken(userId, nim, gender); 
 
     // Generate refresh token
     let refreshToken: string;
@@ -239,7 +241,11 @@ export class AuthService {
     };
   }
 
-  private generateAccessToken(userId: string, nim: string) {
-    return this.jwtService.sign({ sub: userId, nim });
+  private generateAccessToken(userId: string, nim: string, gender: any) { 
+    const payload: any = { sub: userId, nim };
+    if (gender) {
+      payload.gender = gender;
+    }
+    return this.jwtService.sign(payload);
   }
 }
