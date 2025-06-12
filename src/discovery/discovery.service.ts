@@ -53,14 +53,20 @@ export class DiscoveryService {
       isActive: true,
     };
 
-    // gender preference
+    // gender preference - always show opposite gender
+    if (currentUser.gender === Gender.MALE) {
+      baseFilters.gender = Gender.FEMALE;
+    } else if (currentUser.gender === Gender.FEMALE) {
+      baseFilters.gender = Gender.MALE;
+    }
+    // If gender filter is explicitly provided in filterOptions, respect it but only if it's opposite gender
     if (filterOptions.gender) {
-      baseFilters.gender = filterOptions.gender;
-    } else if (
-      currentUser.interestedInGender &&
-      currentUser.interestedInGender !== Gender.ALL
-    ) {
-      baseFilters.gender = currentUser.interestedInGender;
+      if (
+        (currentUser.gender === Gender.MALE && filterOptions.gender === Gender.FEMALE) ||
+        (currentUser.gender === Gender.FEMALE && filterOptions.gender === Gender.MALE)
+      ) {
+        baseFilters.gender = filterOptions.gender;
+      }
     }
 
     const optionalFilters: any = {};
@@ -215,12 +221,7 @@ export class DiscoveryService {
     };
   }
 
-  /**
-   * Quick recommendations for initial feed after login
-   * Optimized for speed and broad matching
-   */
   async getQuickRecommendations(userId: string): Promise<DiscoveryResponseDto> {
-    // Use a smaller batch size and only basic filters for quick loading
     return this.getRecommendations(userId, { limit: 5 }, 0);
   }
 
