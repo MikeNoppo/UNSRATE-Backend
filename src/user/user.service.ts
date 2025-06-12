@@ -244,44 +244,43 @@ export class UsersService {
 
     // Build nested update for interests
     let interestsUpdatePayload: any = undefined;
+
     if (
       updateProfileDto.setInterests &&
       Array.isArray(updateProfileDto.setInterests)
     ) {
       // If setInterests is provided, it defines the complete list of interests.
-      // Prisma will disconnect old UserInterest records and connect/create these new ones.
+      // Prisma will disconnect old UserInterest records not in the new set,
+      // and connect/create UserInterest records for the provided interestIds.
+      // The `userId` for UserInterest records is implicitly the current user's ID.
       interestsUpdatePayload = {
-        set: updateProfileDto.setInterests.map((interestId) => ({
-          // Here, userId refers to the field in UserInterest model linking back to User
-          // and interestId refers to the field in UserInterest model linking to Interest.
-          // This effectively creates UserInterest records with the current user's ID and the provided interestId.
-          userId: userId,
-          interestId: interestId,
+        set: updateProfileDto.setInterests.map((interestId: string) => ({
+          interestId: interestId, // Link to an existing Interest via its ID
         })),
       };
     } else {
+      // Only process add/remove if setInterests is not provided
       const operations: any = {};
       if (
         updateProfileDto.addInterests &&
-        Array.isArray(updateProfileDto.addInterests)
+        Array.isArray(updateProfileDto.addInterests) &&
+        updateProfileDto.addInterests.length > 0
       ) {
         // Create new UserInterest records for each interestId to be added.
-        operations.create = updateProfileDto.addInterests.map((interestId) => ({
-          userId: userId, // Explicitly set userId for the UserInterest record
-          interestId: interestId, // Explicitly set interestId for the UserInterest record
-          // Alternatively, if `interest` is a relation field on UserInterest to the Interest model:
-          // interest: { connect: { id: interestId } }
+        // The `userId` is implicit. We only need to provide the `interestId`.
+        operations.create = updateProfileDto.addInterests.map((interestId: string) => ({
+          interestId: interestId, // Link to an existing Interest via its ID
         }));
       }
       if (
         updateProfileDto.removeInterests &&
-        Array.isArray(updateProfileDto.removeInterests)
+        Array.isArray(updateProfileDto.removeInterests) &&
+        updateProfileDto.removeInterests.length > 0
       ) {
         // Disconnect UserInterest records using their composite primary key.
         operations.disconnect = updateProfileDto.removeInterests.map(
-          (interestId) => ({
+          (interestId: string) => ({
             userId_interestId: {
-              // Prisma convention for composite key field
               userId: userId,
               interestId: interestId,
             },
