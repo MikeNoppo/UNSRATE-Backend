@@ -9,6 +9,7 @@ import { DiscoveryModule } from './discovery/discovery.module';
 import { SwipeModule } from './swipe/swipe.module';
 import { MatchModule } from './match/match.module';
 import { ChatModule } from './chat/chat.module';
+import { InterestModule } from './interest/interest.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { ChatModule } from './chat/chat.module';
     DiscoveryModule,
     SwipeModule,
     MatchModule,
-    ChatModule
+    ChatModule,
+    InterestModule
   ],
   providers: [],
 })

@@ -204,20 +204,42 @@ export class UsersService {
     }
 
     // Build nested update for interests
-    let interestsUpdate: any = undefined;
-    if (updateProfileDto.setInterests) {
-      interestsUpdate = {
-        set: updateProfileDto.setInterests.map(interestId => ({ interestId, userId })),
+    let interestsUpdatePayload: any = undefined;
+    if (updateProfileDto.setInterests && Array.isArray(updateProfileDto.setInterests)) {
+      // If setInterests is provided, it defines the complete list of interests.
+      // Prisma will disconnect old UserInterest records and connect/create these new ones.
+      interestsUpdatePayload = {
+        set: updateProfileDto.setInterests.map(interestId => ({ 
+          // Here, userId refers to the field in UserInterest model linking back to User
+          // and interestId refers to the field in UserInterest model linking to Interest.
+          // This effectively creates UserInterest records with the current user's ID and the provided interestId.
+          userId: userId, 
+          interestId: interestId 
+        })),
       };
     } else {
-      interestsUpdate = {};
-      if (updateProfileDto.addInterests) {
-        interestsUpdate.connect = updateProfileDto.addInterests.map(interestId => ({ interestId, userId }));
+      const operations: any = {};
+      if (updateProfileDto.addInterests && Array.isArray(updateProfileDto.addInterests)) {
+        // Create new UserInterest records for each interestId to be added.
+        operations.create = updateProfileDto.addInterests.map(interestId => ({ 
+          userId: userId, // Explicitly set userId for the UserInterest record
+          interestId: interestId // Explicitly set interestId for the UserInterest record
+          // Alternatively, if `interest` is a relation field on UserInterest to the Interest model:
+          // interest: { connect: { id: interestId } }
+        }));
       }
-      if (updateProfileDto.removeInterests) {
-        interestsUpdate.disconnect = updateProfileDto.removeInterests.map(interestId => ({ interestId, userId }));
+      if (updateProfileDto.removeInterests && Array.isArray(updateProfileDto.removeInterests)) {
+        // Disconnect UserInterest records using their composite primary key.
+        operations.disconnect = updateProfileDto.removeInterests.map(interestId => ({
+          userId_interestId: { // Prisma convention for composite key field
+            userId: userId,
+            interestId: interestId,
+          },
+        }));
       }
-      if (Object.keys(interestsUpdate).length === 0) interestsUpdate = undefined;
+      if (Object.keys(operations).length > 0) {
+        interestsUpdatePayload = operations;
+      }
     }
 
     // Prepare update data, remove interest fields from spread
@@ -237,7 +259,7 @@ export class UsersService {
         dateOfBirth: updateProfileDto.dateOfBirth
           ? new Date(updateProfileDto.dateOfBirth)
           : undefined,
-        ...(interestsUpdate ? { interests: interestsUpdate } : {}),
+        ...(interestsUpdatePayload ? { interests: interestsUpdatePayload } : {}),
       },
       select: {
         id: true,

@@ -7,6 +7,6 @@ export class IncomingMessageDto {
 
   @IsNotEmpty()
   @IsString()
-  @MaxLength(2000) // Consistent with CreateMessageDto previously
+  @MaxLength(2000) 
   content: string;
 }
