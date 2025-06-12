@@ -10,10 +10,10 @@ export function TotalUsersProperty() {
     ApiProperty({
       description: 'Total number of users in the system',
       example: 150,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -25,10 +25,10 @@ export function VerifiedUsersProperty() {
     ApiProperty({
       description: 'Number of verified users',
       example: 75,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -41,10 +41,10 @@ export function VerificationRateProperty() {
       description: 'Percentage of verified users (0-100)',
       example: 50,
       minimum: 0,
-      maximum: 100
+      maximum: 100,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -56,10 +56,10 @@ export function TotalReportsProperty() {
     ApiProperty({
       description: 'Total number of reports submitted',
       example: 8,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -71,9 +71,9 @@ export function ReportedUsersProperty() {
     ApiProperty({
       description: 'Number of users with at least one report',
       example: 5,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }

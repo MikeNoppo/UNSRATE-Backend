@@ -1,10 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBody,
-  ApiTags
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiBody, ApiTags } from '@nestjs/swagger';
 import { LoginDto, RegisterDto } from '../../auth/dto/auth.dto';
 
 /**
@@ -12,9 +7,10 @@ import { LoginDto, RegisterDto } from '../../auth/dto/auth.dto';
  */
 export function ApiRegisterUser() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: 'Register new user',
-      description: 'Creates a new user account and returns authentication tokens'
+      description:
+        'Creates a new user account and returns authentication tokens',
     }),
     ApiBody({
       description: 'User registration data',
@@ -27,37 +23,52 @@ export function ApiRegisterUser() {
             fullname: 'John Doe',
             nim: '1122334455',
             email: 'john.doe@mail.com',
-            password: 'password123'
-          }
-        }
-      }
+            password: 'password123',
+          },
+        },
+      },
     }),
-    ApiResponse({ 
-      status: 201, 
+    ApiResponse({
+      status: 201,
       description: 'User registered successfully',
       schema: {
         properties: {
           status: { type: 'number', example: 200 },
           message: { type: 'string', example: 'Berhasil Membuat Akun' },
-          data: { 
+          data: {
             type: 'object',
             properties: {
-              user_id: { type: 'string', example: '7f1e1546-76a5-4967-b63e-ac9c9f2bbd7e' },
+              user_id: {
+                type: 'string',
+                example: '7f1e1546-76a5-4967-b63e-ac9c9f2bbd7e',
+              },
               email: { type: 'string', example: 'john.doe@mail.com' },
               token: {
                 type: 'object',
                 properties: {
-                  access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
-                  refresh_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
-                }
-              }
-            }
-          }
-        }
-      }
+                  access_token: {
+                    type: 'string',
+                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                  },
+                  refresh_token: {
+                    type: 'string',
+                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     }),
-    ApiResponse({ status: 400, description: 'Bad Request - Validation failed' }),
-    ApiResponse({ status: 409, description: 'Conflict - User with this NIM or email already exists' })
+    ApiResponse({
+      status: 400,
+      description: 'Bad Request - Validation failed',
+    }),
+    ApiResponse({
+      status: 409,
+      description: 'Conflict - User with this NIM or email already exists',
+    }),
   );
 }
 
@@ -66,9 +77,9 @@ export function ApiRegisterUser() {
  */
 export function ApiLoginUser() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: 'User login',
-      description: 'Authenticates a user and returns tokens'
+      description: 'Authenticates a user and returns tokens',
     }),
     ApiBody({
       description: 'User login credentials',
@@ -79,30 +90,42 @@ export function ApiLoginUser() {
           description: 'Login with email and password',
           value: {
             email: 'john.doe@mail.com',
-            password: 'password123'
-          }
-        }
-      }
+            password: 'password123',
+          },
+        },
+      },
     }),
-    ApiResponse({ 
-      status: 200, 
+    ApiResponse({
+      status: 200,
       description: 'Login successful',
       schema: {
         properties: {
           status: { type: 'number', example: 200 },
           message: { type: 'string', example: 'Login berhasil' },
-          data: { 
+          data: {
             type: 'object',
             properties: {
-              access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
-              refresh_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
-            }
-          }
-        }
-      }
+              access_token: {
+                type: 'string',
+                example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              },
+              refresh_token: {
+                type: 'string',
+                example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              },
+            },
+          },
+        },
+      },
     }),
-    ApiResponse({ status: 400, description: 'Bad Request - Validation failed' }),
-    ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
+    ApiResponse({
+      status: 400,
+      description: 'Bad Request - Validation failed',
+    }),
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Invalid credentials',
+    }),
   );
 }
 
@@ -111,27 +134,33 @@ export function ApiLoginUser() {
  */
 export function ApiRefreshToken() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: 'Refresh access token',
-      description: 'Generate a new access token using a valid refresh token'
+      description: 'Generate a new access token using a valid refresh token',
     }),
-    ApiResponse({ 
-      status: 200, 
+    ApiResponse({
+      status: 200,
       description: 'Token refreshed successfully',
       schema: {
         properties: {
           status: { type: 'number', example: 200 },
           message: { type: 'string', example: 'Token berhasil diperbarui' },
-          data: { 
+          data: {
             type: 'object',
             properties: {
-              access_token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
-            }
-          }
-        }
-      }
+              access_token: {
+                type: 'string',
+                example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              },
+            },
+          },
+        },
+      },
     }),
-    ApiResponse({ status: 401, description: 'Unauthorized - Invalid refresh token' })
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Invalid refresh token',
+    }),
   );
 }
 
@@ -140,21 +169,24 @@ export function ApiRefreshToken() {
  */
 export function ApiLogoutUser() {
   return applyDecorators(
-    ApiOperation({ 
+    ApiOperation({
       summary: 'User logout',
-      description: 'Invalidates all refresh tokens for the current user'
+      description: 'Invalidates all refresh tokens for the current user',
     }),
-    ApiResponse({ 
-      status: 200, 
+    ApiResponse({
+      status: 200,
       description: 'Logout successful',
       schema: {
         properties: {
           status: { type: 'number', example: 200 },
           message: { type: 'string', example: 'Logout berhasil' },
-          data: { type: 'null', example: null }
-        }
-      }
+          data: { type: 'null', example: null },
+        },
+      },
     }),
-    ApiResponse({ status: 401, description: 'Unauthorized - Invalid access token' })
+    ApiResponse({
+      status: 401,
+      description: 'Unauthorized - Invalid access token',
+    }),
   );
 }

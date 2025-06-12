@@ -15,7 +15,6 @@ export function xorEncrypt(plaintext: string, key: string): string {
   return resultBuffer.toString('base64');
 }
 
-
 export function xorDecrypt(base64Ciphertext: string, key: string): string {
   if (!key) {
     throw new Error('Decryption key is missing.');

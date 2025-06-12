@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
@@ -22,7 +27,9 @@ export class WsJwtGuard implements CanActivate {
       client.handshake.headers?.authorization?.split(' ')[1];
 
     if (!token) {
-      this.logger.warn(`Client ${client.id} connection denied: No token provided.`);
+      this.logger.warn(
+        `Client ${client.id} connection denied: No token provided.`,
+      );
       client.disconnect(true); // Or emit an error event
       return false;
     }
@@ -30,19 +37,25 @@ export class WsJwtGuard implements CanActivate {
     try {
       const secret = this.configService.get<string>('JWT_SECRET');
       if (!secret) {
-        this.logger.error('JWT_SECRET is not defined in environment variables.');
+        this.logger.error(
+          'JWT_SECRET is not defined in environment variables.',
+        );
         throw new Error('JWT_SECRET is not configured.');
       }
       const payload = this.jwtService.verify(token, { secret });
       if (payload && payload.sub) {
         return true;
       } else {
-        this.logger.error(`[WsJwtGuard][${client.id}] FATAL: Payload verified but missing sub. Payload: ${JSON.stringify(payload)}`);
+        this.logger.error(
+          `[WsJwtGuard][${client.id}] FATAL: Payload verified but missing sub. Payload: ${JSON.stringify(payload)}`,
+        );
         client.disconnect(true);
         return false;
       }
     } catch (error) {
-      this.logger.warn(`[WsJwtGuard][${client.id}] Connection denied: Token verification failed. ${error.message}`);
+      this.logger.warn(
+        `[WsJwtGuard][${client.id}] Connection denied: Token verification failed. ${error.message}`,
+      );
       client.disconnect(true); // Or emit an error event
       return false;
     }

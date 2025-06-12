@@ -9,23 +9,25 @@ import { WsJwtGuard } from './guards/ws-jwt.guard'; // Import the WsJwtGuard
 
 @Module({
   imports: [
-    PrismaModule, 
+    PrismaModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION_TIME') },
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME'),
+        },
       }),
       inject: [ConfigService],
     }),
-  ], 
+  ],
   controllers: [ChatController],
   providers: [
     ChatService,
     ChatGateway,
-    WsJwtGuard // Add WsJwtGuard to providers
+    WsJwtGuard, // Add WsJwtGuard to providers
   ],
-  exports: [ChatService, ChatGateway] // Export if needed by other modules
+  exports: [ChatService, ChatGateway], // Export if needed by other modules
 })
 export class ChatModule {}

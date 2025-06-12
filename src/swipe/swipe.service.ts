@@ -1,12 +1,15 @@
-import { 
-  Injectable, 
-  ConflictException, 
-  NotFoundException, 
-  BadRequestException 
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSwipeDto } from './dto/create-swipe.dto';
-import { SwipeResponseDto, SwipeStatsResponseDto } from './dto/swipe-response.dto';
+import {
+  SwipeResponseDto,
+  SwipeStatsResponseDto,
+} from './dto/swipe-response.dto';
 import { SwipeAction } from '@prisma/client';
 
 @Injectable()
@@ -16,16 +19,21 @@ export class SwipeService {
   /**
    * Create a swipe record and potentially a match if there's mutual interest
    */
-  async createSwipe(userId: string, createSwipeDto: CreateSwipeDto): Promise<SwipeResponseDto> {
+  async createSwipe(
+    userId: string,
+    createSwipeDto: CreateSwipeDto,
+  ): Promise<SwipeResponseDto> {
     const { swipedUserId, action } = createSwipeDto;
 
     // Validate that the swiped user exists
     const swipedUser = await this.prisma.user.findUnique({
-      where: { id: swipedUserId }
+      where: { id: swipedUserId },
     });
 
     if (!swipedUser) {
-      throw new NotFoundException('The user you are trying to swipe on does not exist');
+      throw new NotFoundException(
+        'The user you are trying to swipe on does not exist',
+      );
     }
 
     // Prevent swiping on oneself
@@ -38,9 +46,9 @@ export class SwipeService {
       where: {
         swiperUserId_swipedUserId: {
           swiperUserId: userId,
-          swipedUserId
-        }
-      }
+          swipedUserId,
+        },
+      },
     });
 
     if (existingSwipe) {
@@ -54,8 +62,8 @@ export class SwipeService {
         data: {
           swiperUserId: userId,
           swipedUserId,
-          action
-        }
+          action,
+        },
       });
 
       // If this is a LIKE, check for a mutual like (to create a match)
@@ -66,9 +74,9 @@ export class SwipeService {
           where: {
             swiperUserId_swipedUserId: {
               swiperUserId: swipedUserId,
-              swipedUserId: userId
-            }
-          }
+              swipedUserId: userId,
+            },
+          },
         });
 
         // If mutual like exists, create a match
@@ -76,12 +84,12 @@ export class SwipeService {
           // Determine order for user IDs to ensure consistency
           // This prevents having both (A,B) and (B,A) as separate matches
           const [userAId, userBId] = [userId, swipedUserId].sort();
-          
+
           match = await tx.match.create({
             data: {
               userAId,
-              userBId
-            }
+              userBId,
+            },
           });
         }
       }
@@ -92,11 +100,11 @@ export class SwipeService {
     // Format the response
     return {
       statusCode: 200,
-      message: result.match 
+      message: result.match
         ? "It's a match! You both liked each other."
         : 'Swipe recorded successfully',
       swipe: result.swipe,
-      match: result.match
+      match: result.match,
     };
   }
 
@@ -108,32 +116,28 @@ export class SwipeService {
     const totalLikes = await this.prisma.swipe.count({
       where: {
         swiperUserId: userId,
-        action: SwipeAction.LIKE
-      }
+        action: SwipeAction.LIKE,
+      },
     });
 
     // Count dislikes given by the user
     const totalDislikes = await this.prisma.swipe.count({
       where: {
         swiperUserId: userId,
-        action: SwipeAction.DISLIKE
-      }
+        action: SwipeAction.DISLIKE,
+      },
     });
 
     // Count matches for this user
     const totalMatches = await this.prisma.match.count({
       where: {
-        OR: [
-          { userAId: userId },
-          { userBId: userId }
-        ]
-      }
+        OR: [{ userAId: userId }, { userBId: userId }],
+      },
     });
 
     // Calculate match rate (percentage of likes that resulted in matches)
-    const matchRate = totalLikes > 0 
-      ? Math.round((totalMatches / totalLikes) * 100) 
-      : 0;
+    const matchRate =
+      totalLikes > 0 ? Math.round((totalMatches / totalLikes) * 100) : 0;
 
     return {
       statusCode: 200,
@@ -141,7 +145,7 @@ export class SwipeService {
       totalLikes,
       totalDislikes,
       totalMatches,
-      matchRate
+      matchRate,
     };
   }
 }

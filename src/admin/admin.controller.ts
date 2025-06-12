@@ -1,9 +1,20 @@
-import { Body, Controller, Delete, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
-import { ApiDashboardStats, ApiListUsers } from '../decorators/admin/admin-swagger.decorators';
+import {
+  ApiDashboardStats,
+  ApiListUsers,
+} from '../decorators/admin/admin-swagger.decorators';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { ListUsersResponseDto } from './dto/list-users-response.dto';
 
@@ -12,7 +23,7 @@ import { ListUsersResponseDto } from './dto/list-users-response.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) { }
+  constructor(private readonly adminService: AdminService) {}
 
   @Get('dashboard/stats')
   @ApiDashboardStats()
@@ -22,12 +33,14 @@ export class AdminController {
 
   @Get('users')
   @ApiListUsers()
-  async listUsers(@Query() query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
+  async listUsers(
+    @Query() query: ListUsersQueryDto,
+  ): Promise<ListUsersResponseDto> {
     return this.adminService.listUsers(query);
   }
 
   @Delete('user')
-  async deleteUser(@Body('userId') userId: string){
+  async deleteUser(@Body('userId') userId: string) {
     return this.adminService.deleteUser(userId);
   }
 

@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // Assuming you have PrismaService
 import { xorEncrypt, xorDecrypt } from '../utils/crypto.util';
 import { ConfigService } from '@nestjs/config';
@@ -13,7 +17,9 @@ export class ChatService {
   ) {
     this.encryptionKey = this.configService.get<string>('MESSAGE_XOR_KEY');
     if (!this.encryptionKey) {
-      throw new Error('MESSAGE_XOR_KEY is not defined in environment variables.');
+      throw new Error(
+        'MESSAGE_XOR_KEY is not defined in environment variables.',
+      );
     }
   }
 
@@ -36,7 +42,9 @@ export class ChatService {
     const messages = await this.prisma.message.findMany({
       where: { matchId },
       orderBy: { createdAt: 'asc' },
-      include: { sender: { select: { id: true, fullname: true, profilePicture: true } } }, // Include sender details
+      include: {
+        sender: { select: { id: true, fullname: true, profilePicture: true } },
+      }, // Include sender details
     });
 
     return messages.map((msg) => ({

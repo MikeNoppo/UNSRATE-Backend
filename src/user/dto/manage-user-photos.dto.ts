@@ -1,5 +1,8 @@
 import { IsArray, IsOptional, IsString, IsUrl } from 'class-validator';
-import { ProfilePictureProperty, RemovePhotosProperty } from '../../decorators/user/user-property.decorators';
+import {
+  ProfilePictureProperty,
+  RemovePhotosProperty,
+} from '../../decorators/user/user-property.decorators';
 
 export class ManageUserPhotosDto {
   @RemovePhotosProperty()
@@ -10,6 +13,6 @@ export class ManageUserPhotosDto {
 
   @ProfilePictureProperty()
   @IsOptional()
-  @IsUrl() 
+  @IsUrl()
   profilePicture?: string;
 }

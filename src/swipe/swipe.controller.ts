@@ -3,7 +3,10 @@ import { SwipeService } from './swipe.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
 import { CreateSwipeDto } from './dto/create-swipe.dto';
-import { SwipeResponseDto, SwipeStatsResponseDto } from './dto/swipe-response.dto';
+import {
+  SwipeResponseDto,
+  SwipeStatsResponseDto,
+} from './dto/swipe-response.dto';
 
 @Controller('swipes')
 @UseGuards(JwtAuthGuard)

@@ -4,7 +4,7 @@ import { InterestController } from './interest.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule], 
+  imports: [PrismaModule],
   controllers: [InterestController],
   providers: [InterestService],
 })

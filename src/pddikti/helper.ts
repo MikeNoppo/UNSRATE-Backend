@@ -1,11 +1,14 @@
 import axios, { AxiosResponse } from 'axios';
 
 export class Helper {
-    private url: string = 'aHR0cHM6Ly9hcGktcGRkaWt0aS5rZW1kaWt0aXNhaW50ZWsuZ28uaWQ='; //base 64 encoded URL 
-    private host: string = 'YXBpLXBkZGlrdGkua2VtZGlrdGlzYWludGVrLmdvLmlk';//base 64 encoded URL
-    private origin: string = 'aHR0cHM6Ly9wZGRpa3RpLmtlbWRpa3Rpc2FpbnRlay5nby5pZA==';//base 64 encoded URL
-    private referer: string = 'aHR0cHM6Ly9wZGRpa3RpLmtlbWRpa3Rpc2FpbnRlay5nby5pZC8=';//base 64 encoded URL
-    private ip: string = 'MTAzLjQ3LjEzMi4yOQ==';
+  private url: string =
+    'aHR0cHM6Ly9hcGktcGRkaWt0aS5rZW1kaWt0aXNhaW50ZWsuZ28uaWQ='; //base 64 encoded URL
+  private host: string = 'YXBpLXBkZGlrdGkua2VtZGlrdGlzYWludGVrLmdvLmlk'; //base 64 encoded URL
+  private origin: string =
+    'aHR0cHM6Ly9wZGRpa3RpLmtlbWRpa3Rpc2FpbnRlay5nby5pZA=='; //base 64 encoded URL
+  private referer: string =
+    'aHR0cHM6Ly9wZGRpa3RpLmtlbWRpa3Rpc2FpbnRlay5nby5pZC8='; //base 64 encoded URL
+  private ip: string = 'MTAzLjQ3LjEzMi4yOQ==';
 
   /**
    * Retrieves the public IP address of the machine.
@@ -25,22 +28,24 @@ export class Helper {
    */
   async getHeaders(): Promise<Record<string, string>> {
     return {
-      'Accept': 'application/json, text/plain, */*',
+      Accept: 'application/json, text/plain, */*',
       'Accept-Encoding': 'gzip, deflate, br, zstd',
       'Accept-Language': 'en-US,en;q=0.9,mt;q=0.8',
-      'Connection': 'keep-alive',
-      'DNT': '1',
-      'Host': this.decodes(this.host),
-      'Origin': this.decodes(this.origin),
-      'Referer': this.decodes(this.referer),
+      Connection: 'keep-alive',
+      DNT: '1',
+      Host: this.decodes(this.host),
+      Origin: this.decodes(this.origin),
+      Referer: this.decodes(this.referer),
       'Sec-Fetch-Dest': 'empty',
       'Sec-Fetch-Mode': 'cors',
       'Sec-Fetch-Site': 'same-site',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0',
       'X-User-IP': await this.getIp(),
-      'sec-ch-ua': '"Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      'sec-ch-ua':
+        '"Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
       'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"Windows"'
+      'sec-ch-ua-platform': '"Windows"',
     };
   }
 

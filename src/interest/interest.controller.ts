@@ -1,6 +1,11 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { InterestService } from './interest.service';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { InterestDto } from './dto/interest.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 

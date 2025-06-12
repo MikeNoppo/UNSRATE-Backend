@@ -1,28 +1,38 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DiscoveryFilterDto } from './dto/discovery-filter.dto';
-import { DiscoveryResponseDto, DiscoveryProfileDto } from './dto/discovery-response.dto';
-import { calculateMatchScore, calculateAcademicBonus } from './utils/match-score.util';
+import {
+  DiscoveryResponseDto,
+  DiscoveryProfileDto,
+} from './dto/discovery-response.dto';
+import {
+  calculateMatchScore,
+  calculateAcademicBonus,
+} from './utils/match-score.util';
 import { Gender } from '@prisma/client';
 
 @Injectable()
 export class DiscoveryService {
   constructor(private prisma: PrismaService) {}
-  
+
   async getRecommendations(
-    userId: string, 
+    userId: string,
     filterOptions: DiscoveryFilterDto,
-    page = 0
+    page = 0,
   ): Promise<DiscoveryResponseDto> {
     // Validate user exists
     const currentUser = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         interests: {
-          include: { interest: true }
+          include: { interest: true },
         },
         swipesMade: true, // To exclude already swiped users
-      }
+      },
     });
 
     if (!currentUser) {
@@ -30,8 +40,10 @@ export class DiscoveryService {
     }
 
     // Get IDs of users already swiped to exclude them
-    const swipedUserIds = currentUser.swipesMade.map(swipe => swipe.swipedUserId);
-    
+    const swipedUserIds = currentUser.swipesMade.map(
+      (swipe) => swipe.swipedUserId,
+    );
+
     // Always exclude the current user
     swipedUserIds.push(userId);
 
@@ -41,24 +53,27 @@ export class DiscoveryService {
       isActive: true,
     };
 
-    // gender preference 
+    // gender preference
     if (filterOptions.gender) {
       baseFilters.gender = filterOptions.gender;
-    } else if (currentUser.interestedInGender && currentUser.interestedInGender !== Gender.ALL) {
+    } else if (
+      currentUser.interestedInGender &&
+      currentUser.interestedInGender !== Gender.ALL
+    ) {
       baseFilters.gender = currentUser.interestedInGender;
     }
-    
+
     const optionalFilters: any = {};
-    
+
     // Age filters - only if explicitly requested
     if (filterOptions.minAge) {
       optionalFilters.age = { gte: filterOptions.minAge };
     }
 
     if (filterOptions.maxAge) {
-      optionalFilters.age = { 
-        ...(optionalFilters.age || {}), 
-        lte: filterOptions.maxAge 
+      optionalFilters.age = {
+        ...(optionalFilters.age || {}),
+        lte: filterOptions.maxAge,
       };
     }
 
@@ -66,7 +81,7 @@ export class DiscoveryService {
     if (filterOptions.fakultas) {
       optionalFilters.fakultas = filterOptions.fakultas;
     }
-    
+
     if (filterOptions.prodi) {
       optionalFilters.prodi = filterOptions.prodi;
     }
@@ -78,7 +93,7 @@ export class DiscoveryService {
     // Combine base and optional filters for initial search
     const initialFilters = {
       ...baseFilters,
-      ...optionalFilters
+      ...optionalFilters,
     };
 
     // Initial query - try to find matches with all preferences
@@ -86,8 +101,8 @@ export class DiscoveryService {
       where: initialFilters,
       include: {
         interests: {
-          include: { interest: true }
-        }
+          include: { interest: true },
+        },
       },
       skip,
       take: limit,
@@ -101,29 +116,30 @@ export class DiscoveryService {
     // If results are too few, and user hasn't specified strict mode,
     // fall back to a more relaxed query using only base filters
     const minDesiredMatches = 5;
-    if (potentialMatches.length < minDesiredMatches && 
-        Object.keys(optionalFilters).length > 0 && 
-        !filterOptions.sharedInterestsOnly) {
-      
+    if (
+      potentialMatches.length < minDesiredMatches &&
+      Object.keys(optionalFilters).length > 0 &&
+      !filterOptions.sharedInterestsOnly
+    ) {
       console.log('Few matches found with filters, expanding search criteria');
-      
+
       // Get additional matches with relaxed criteria
       const additionalMatches = await this.prisma.user.findMany({
         where: baseFilters,
         include: {
           interests: {
-            include: { interest: true }
-          }
+            include: { interest: true },
+          },
         },
         // Skip results we already have
         skip: 0,
         // Only get enough to reach our minimum desired
         take: minDesiredMatches - potentialMatches.length,
       });
-      
+
       // Add fallback matches to our results
       potentialMatches = [...potentialMatches, ...additionalMatches];
-      
+
       // Update total count to include relaxed criteria matches
       totalCount = await this.prisma.user.count({
         where: baseFilters,
@@ -131,31 +147,31 @@ export class DiscoveryService {
     }
 
     // Process results to calculate match scores
-    const userInterests = currentUser.interests.map(ui => ({
+    const userInterests = currentUser.interests.map((ui) => ({
       id: ui.interest.id,
-      name: ui.interest.name
+      name: ui.interest.name,
     }));
-    
-    let scoredMatches = potentialMatches.map(match => {
-      const matchInterests = match.interests.map(mi => ({
+
+    let scoredMatches = potentialMatches.map((match) => {
+      const matchInterests = match.interests.map((mi) => ({
         id: mi.interest.id,
-        name: mi.interest.name
+        name: mi.interest.name,
       }));
 
       // Calculate base match score using interests
       let score = calculateMatchScore(userInterests, matchInterests);
-      
+
       // Add bonus points for academic similarity if applicable
       score += calculateAcademicBonus(
         currentUser.fakultas,
         match.fakultas,
         currentUser.prodi,
-        match.prodi
+        match.prodi,
       );
 
       // Cap at 100 points maximum
       score = Math.min(score, 100);
-      
+
       // Format the response data
       const profile: DiscoveryProfileDto = {
         id: match.id,
@@ -170,13 +186,15 @@ export class DiscoveryService {
         interests: matchInterests,
         matchScore: score,
       };
-      
+
       return profile;
     });
 
     // Apply shared interests filter only if explicitly requested
     if (filterOptions.sharedInterestsOnly) {
-      scoredMatches = scoredMatches.filter(profile => profile.matchScore > 50);
+      scoredMatches = scoredMatches.filter(
+        (profile) => profile.matchScore > 50,
+      );
     }
 
     // Sort by match score (highest first)
@@ -222,18 +240,19 @@ export class DiscoveryService {
         select: {
           id: true,
           interestedInGender: true,
-          minAgePreference: true, 
-          maxAgePreference: true
-        }
+          minAgePreference: true,
+          maxAgePreference: true,
+        },
       });
-      
+
       return {
         statusCode: 200,
         message: 'Discovery preferences updated',
-        data: updatedUser
+        data: updatedUser,
       };
     } catch (error) {
-      if (error.code === 'P2025') { // Prisma not found error
+      if (error.code === 'P2025') {
+        // Prisma not found error
         throw new NotFoundException('User not found');
       }
       throw error;

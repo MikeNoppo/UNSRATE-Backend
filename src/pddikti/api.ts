@@ -20,11 +20,16 @@ export class PddiktiApi {
    * Error handling wrapper for API calls
    */
   private async handleErrors<T>(
-    callback: () => Promise<T | null>
+    callback: () => Promise<T | null>,
   ): Promise<T | null> {
     try {
       const response = await callback();
-      if (!response || (typeof response === 'object' && response !== null && 'error' in response)) {
+      if (
+        !response ||
+        (typeof response === 'object' &&
+          response !== null &&
+          'error' in response)
+      ) {
         throw new Error('API response indicates an error');
       }
       return response;
@@ -41,9 +46,9 @@ export class PddiktiApi {
     return this.handleErrors<MahasiswaData>(async () => {
       const endpoint = `${this.apiLink}/pencarian/mhs/${this.H.parse(keyword)}`;
       const response = await this.H.response<MahasiswaData[]>(endpoint);
-      
+
       if (response && Array.isArray(response)) {
-        return response.find(x => x.nim === keyword) || null;
+        return response.find((x) => x.nim === keyword) || null;
       }
       return null;
     });

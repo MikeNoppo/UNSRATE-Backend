@@ -7,6 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [DiscoveryController],
   providers: [DiscoveryService],
-  exports: [DiscoveryService], 
+  exports: [DiscoveryService],
 })
 export class DiscoveryModule {}

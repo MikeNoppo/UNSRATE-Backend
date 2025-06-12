@@ -1,6 +1,13 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsNumber, IsObject, IsString, Min } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsObject,
+  IsString,
+  Min,
+} from 'class-validator';
 
 /**
  * User property for admin listing
@@ -20,9 +27,9 @@ export function UserItemProperty() {
         program: 'Information Technology',
         reportCount: 0,
         createdAt: '2023-04-15T08:30:00.000Z',
-      }
+      },
     }),
-    IsObject()
+    IsObject(),
   );
 }
 
@@ -42,11 +49,11 @@ export function UsersArrayProperty() {
           nim: '1234567890',
           email: 'john.doe@example.com',
           verified: true,
-          profilePicture: 'https://example.com/profile.jpg'
-        }
-      ]
+          profilePicture: 'https://example.com/profile.jpg',
+        },
+      ],
     }),
-    IsArray()
+    IsArray(),
   );
 }
 
@@ -58,10 +65,10 @@ export function TotalCountProperty() {
     ApiProperty({
       description: 'Total count of matching records',
       example: 150,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -75,10 +82,10 @@ export function PageInfoProperty() {
       example: {
         currentPage: 0,
         limit: 10,
-        totalPages: 15
-      }
+        totalPages: 15,
+      },
     }),
-    IsObject()
+    IsObject(),
   );
 }
 
@@ -90,10 +97,10 @@ export function CurrentPageProperty() {
     ApiProperty({
       description: 'Current page (0-indexed)',
       example: 0,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }
 
@@ -105,10 +112,10 @@ export function LimitProperty() {
     ApiProperty({
       description: 'Items per page',
       example: 10,
-      minimum: 1
+      minimum: 1,
     }),
     IsNumber(),
-    Min(1)
+    Min(1),
   );
 }
 
@@ -120,9 +127,9 @@ export function TotalPagesProperty() {
     ApiProperty({
       description: 'Total number of pages',
       example: 15,
-      minimum: 0
+      minimum: 0,
     }),
     IsNumber(),
-    Min(0)
+    Min(0),
   );
 }

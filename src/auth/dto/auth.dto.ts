@@ -1,6 +1,12 @@
 import { Gender } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class LoginDto {
   @IsNotEmpty()

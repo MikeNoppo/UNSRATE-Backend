@@ -1,4 +1,11 @@
-import { IsEnum, IsInt, IsOptional, Min, Max, IsBoolean } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsBoolean,
+} from 'class-validator';
 import { Gender } from '@prisma/client';
 
 export class DiscoveryFilterDto {
@@ -15,13 +22,13 @@ export class DiscoveryFilterDto {
   @Max(100)
   @IsOptional()
   maxAge?: number;
-  
+
   @IsOptional()
   fakultas?: string;
-  
+
   @IsOptional()
   prodi?: string;
-  
+
   @IsInt()
   @Min(1)
   @Max(50)

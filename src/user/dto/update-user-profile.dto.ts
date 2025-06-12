@@ -1,5 +1,5 @@
 import { Gender, UserInterest } from '@prisma/client';
-import { 
+import {
   FullnameProperty,
   ProfilePictureProperty,
   PhotosArrayProperty,
@@ -9,7 +9,7 @@ import {
   AddressProperty,
   GenderPreferenceProperty,
   MinAgePreferenceProperty,
-  MaxAgePreferenceProperty
+  MaxAgePreferenceProperty,
 } from '../../decorators/user/user-property.decorators';
 import { IsOptional, IsString } from 'class-validator';
 
@@ -60,7 +60,7 @@ export class UpdateUserProfileDto {
 
   @IsOptional()
   age?: number;
-  
+
   @IsOptional()
   @AddressProperty()
   alamat?: string;

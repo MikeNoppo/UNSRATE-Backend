@@ -1,15 +1,23 @@
-import { Controller, Post, Body, UseGuards, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { User } from '../decorators/user.decorator';
 import { ApiTags } from '@nestjs/swagger';
-import { 
-  ApiRegisterUser, 
-  ApiLoginUser, 
-  ApiRefreshToken, 
-  ApiLogoutUser 
+import {
+  ApiRegisterUser,
+  ApiLoginUser,
+  ApiRefreshToken,
+  ApiLogoutUser,
 } from '../decorators/auth/auth-swagger.decorators';
 
 @ApiTags('auth')
@@ -34,7 +42,9 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   @ApiRefreshToken()
-  refreshTokens(@User() user: { userId: string; nim: string; refreshToken: string }) {
+  refreshTokens(
+    @User() user: { userId: string; nim: string; refreshToken: string },
+  ) {
     return this.authService.refreshToken(user.refreshToken);
   }
 

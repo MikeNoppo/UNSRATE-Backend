@@ -11,7 +11,7 @@ import multipart from '@fastify/multipart';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter()
+    new FastifyAdapter(),
   );
 
   app.enableCors({
@@ -20,17 +20,19 @@ async function bootstrap() {
     // preflightContinue: false,
     credentials: true,
   });
-  
+
   // Enable validation
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    transformOptions: {
-      enableImplicitConversion: true, // Helps with basic type conversions
-      // strategy: 'exposeAll', // Uncomment if you use @Exclude or @Expose extensively and need to control transformation
-    },
-    // forbidNonWhitelisted: true, // Consider adding this for stricter validation later
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true, // Helps with basic type conversions
+        // strategy: 'exposeAll', // Uncomment if you use @Exclude or @Expose extensively and need to control transformation
+      },
+      // forbidNonWhitelisted: true, // Consider adding this for stricter validation later
+    }),
+  );
 
   await app.register(multipart, {
     attachFieldsToBody: true,

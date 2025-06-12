@@ -6,7 +6,10 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { ManageUserPhotosDto } from './dto/manage-user-photos.dto';
-import { GetUserProfileResponseDto, UserProfileDto } from './dto/get-userProfile.dto';
+import {
+  GetUserProfileResponseDto,
+  UserProfileDto,
+} from './dto/get-userProfile.dto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 
@@ -16,19 +19,22 @@ function generateUniqueFileName(originalFilename?: string): string {
   const randomString = Math.random().toString(36).substring(2, 15);
 
   // Handle cases where originalFilename might be undefined, null, or empty
-  const nameToProcess = originalFilename && originalFilename.trim() !== "" ? originalFilename : `unknownfile-${timestamp}`;
-  
+  const nameToProcess =
+    originalFilename && originalFilename.trim() !== ''
+      ? originalFilename
+      : `unknownfile-${timestamp}`;
+
   const parts = nameToProcess.split('.');
   let extension = 'jpg'; // Default extension
 
   if (parts.length > 1) {
     const lastPart = parts.pop();
     // Ensure extension is a valid string and not excessively long (simple check)
-    if (lastPart && lastPart.trim() !== "" && lastPart.length < 10) { 
+    if (lastPart && lastPart.trim() !== '' && lastPart.length < 10) {
       extension = lastPart;
     }
   }
-  
+
   return `${timestamp}-${randomString}.${extension}`;
 }
 
@@ -44,7 +50,9 @@ export class UsersService {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseKey = this.configService.get<string>('SUPABASE_KEY');
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Supabase URL and Key must be provided in environment variables');
+      throw new Error(
+        'Supabase URL and Key must be provided in environment variables',
+      );
     }
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
@@ -58,7 +66,9 @@ export class UsersService {
       throw new BadRequestException('Invalid file data: missing mimetype.');
     }
     if (typeof file.toBuffer !== 'function') {
-      throw new BadRequestException('Invalid file data: missing toBuffer method.');
+      throw new BadRequestException(
+        'Invalid file data: missing toBuffer method.',
+      );
     }
 
     const uniqueFileName = generateUniqueFileName(file.filename);
@@ -68,11 +78,15 @@ export class UsersService {
     try {
       uploadSource = await file.toBuffer();
     } catch {
-      throw new BadRequestException(`Failed to process file buffer for ${file.filename}.`);
+      throw new BadRequestException(
+        `Failed to process file buffer for ${file.filename}.`,
+      );
     }
 
     if (!uploadSource || uploadSource.length === 0) {
-      throw new BadRequestException(`File buffer for ${file.filename} is empty or could not be retrieved.`);
+      throw new BadRequestException(
+        `File buffer for ${file.filename} is empty or could not be retrieved.`,
+      );
     }
 
     const { data, error: uploadError } = await this.supabase.storage
@@ -83,15 +97,23 @@ export class UsersService {
       });
 
     if (uploadError) {
-      throw new BadRequestException(`Failed to upload photo ${file.filename}. Supabase error: ${uploadError.message}`);
+      throw new BadRequestException(
+        `Failed to upload photo ${file.filename}. Supabase error: ${uploadError.message}`,
+      );
     }
 
     const publicUrlData = this.supabase.storage
       .from('user-photos')
       .getPublicUrl(filePath);
 
-    if (!publicUrlData || !publicUrlData.data || !publicUrlData.data.publicUrl) {
-      throw new BadRequestException(`Failed to get a valid photo URL for ${file.filename} after upload.`);
+    if (
+      !publicUrlData ||
+      !publicUrlData.data ||
+      !publicUrlData.data.publicUrl
+    ) {
+      throw new BadRequestException(
+        `Failed to get a valid photo URL for ${file.filename} after upload.`,
+      );
     }
 
     return publicUrlData.data.publicUrl;
@@ -99,10 +121,10 @@ export class UsersService {
 
   async getUserProfile(userId: string): Promise<GetUserProfileResponseDto> {
     // Validasi User ID
-    if(!userId) {
+    if (!userId) {
       throw new BadRequestException('User ID is required');
     }
-    
+
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -133,30 +155,35 @@ export class UsersService {
           },
         },
       });
-      
+
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
       // Hitung persentase kelengkapan profil
       const profileFields = [
-        user.fullname, 
-        user.profilePicture, 
-        user.bio, 
-        user.gender, 
+        user.fullname,
+        user.profilePicture,
+        user.bio,
+        user.gender,
         user.fakultas,
         user.prodi,
         user.alamat,
       ];
-      
-      const filledFields = profileFields.filter(field => field !== null && field !== undefined).length;
-      const completionPercentage = Math.round((filledFields / profileFields.length) * 100);
-      
+
+      const filledFields = profileFields.filter(
+        (field) => field !== null && field !== undefined,
+      ).length;
+      const completionPercentage = Math.round(
+        (filledFields / profileFields.length) * 100,
+      );
+
       // Transform minat pengguna ke format yang lebih baik
-      const interests = user.interests?.map(item => ({
-        id: item.interest.id,
-        name: item.interest.name,
-      })) || [];
+      const interests =
+        user.interests?.map((item) => ({
+          id: item.interest.id,
+          name: item.interest.name,
+        })) || [];
 
       // Transform data untuk format response yang konsisten
       const profileData = {
@@ -166,11 +193,23 @@ export class UsersService {
 
       // Tambahkan informasi yang lebih relevan untuk self-viewing
       const missingFields = profileFields
-        .map((field, index) => ({ field: field, name: ['fullname', 'profilePicture', 'bio', 'gender', 
-                                                       'fakultas', 'prodi', 'alamat', 'interestedInGender', 
-                                                       'minAgePreference', 'maxAgePreference'][index] }))
-        .filter(item => item.field === null || item.field === undefined)
-        .map(item => item.name);
+        .map((field, index) => ({
+          field: field,
+          name: [
+            'fullname',
+            'profilePicture',
+            'bio',
+            'gender',
+            'fakultas',
+            'prodi',
+            'alamat',
+            'interestedInGender',
+            'minAgePreference',
+            'maxAgePreference',
+          ][index],
+        }))
+        .filter((item) => item.field === null || item.field === undefined)
+        .map((item) => item.name);
 
       return {
         statusCode: 200,
@@ -205,37 +244,49 @@ export class UsersService {
 
     // Build nested update for interests
     let interestsUpdatePayload: any = undefined;
-    if (updateProfileDto.setInterests && Array.isArray(updateProfileDto.setInterests)) {
+    if (
+      updateProfileDto.setInterests &&
+      Array.isArray(updateProfileDto.setInterests)
+    ) {
       // If setInterests is provided, it defines the complete list of interests.
       // Prisma will disconnect old UserInterest records and connect/create these new ones.
       interestsUpdatePayload = {
-        set: updateProfileDto.setInterests.map(interestId => ({ 
+        set: updateProfileDto.setInterests.map((interestId) => ({
           // Here, userId refers to the field in UserInterest model linking back to User
           // and interestId refers to the field in UserInterest model linking to Interest.
           // This effectively creates UserInterest records with the current user's ID and the provided interestId.
-          userId: userId, 
-          interestId: interestId 
+          userId: userId,
+          interestId: interestId,
         })),
       };
     } else {
       const operations: any = {};
-      if (updateProfileDto.addInterests && Array.isArray(updateProfileDto.addInterests)) {
+      if (
+        updateProfileDto.addInterests &&
+        Array.isArray(updateProfileDto.addInterests)
+      ) {
         // Create new UserInterest records for each interestId to be added.
-        operations.create = updateProfileDto.addInterests.map(interestId => ({ 
+        operations.create = updateProfileDto.addInterests.map((interestId) => ({
           userId: userId, // Explicitly set userId for the UserInterest record
-          interestId: interestId // Explicitly set interestId for the UserInterest record
+          interestId: interestId, // Explicitly set interestId for the UserInterest record
           // Alternatively, if `interest` is a relation field on UserInterest to the Interest model:
           // interest: { connect: { id: interestId } }
         }));
       }
-      if (updateProfileDto.removeInterests && Array.isArray(updateProfileDto.removeInterests)) {
+      if (
+        updateProfileDto.removeInterests &&
+        Array.isArray(updateProfileDto.removeInterests)
+      ) {
         // Disconnect UserInterest records using their composite primary key.
-        operations.disconnect = updateProfileDto.removeInterests.map(interestId => ({
-          userId_interestId: { // Prisma convention for composite key field
-            userId: userId,
-            interestId: interestId,
-          },
-        }));
+        operations.disconnect = updateProfileDto.removeInterests.map(
+          (interestId) => ({
+            userId_interestId: {
+              // Prisma convention for composite key field
+              userId: userId,
+              interestId: interestId,
+            },
+          }),
+        );
       }
       if (Object.keys(operations).length > 0) {
         interestsUpdatePayload = operations;
@@ -243,12 +294,8 @@ export class UsersService {
     }
 
     // Prepare update data, remove interest fields from spread
-    const {
-      addInterests,
-      removeInterests,
-      setInterests,
-      ...otherFields
-    } = updateProfileDto;
+    const { addInterests, removeInterests, setInterests, ...otherFields } =
+      updateProfileDto;
 
     // Update user profile
     return this.prisma.user.update({
@@ -259,7 +306,9 @@ export class UsersService {
         dateOfBirth: updateProfileDto.dateOfBirth
           ? new Date(updateProfileDto.dateOfBirth)
           : undefined,
-        ...(interestsUpdatePayload ? { interests: interestsUpdatePayload } : {}),
+        ...(interestsUpdatePayload
+          ? { interests: interestsUpdatePayload }
+          : {}),
       },
       select: {
         id: true,
@@ -294,19 +343,29 @@ export class UsersService {
     });
   }
 
-  async manageUserPhotos(userId: string, photosDto: ManageUserPhotosDto, filesFromController?: any[]) {
+  async manageUserPhotos(
+    userId: string,
+    photosDto: ManageUserPhotosDto,
+    filesFromController?: any[],
+  ) {
     let filesToProcess: any[] = Array.isArray(filesFromController)
       ? filesFromController
       : filesFromController
-      ? [filesFromController]
-      : [];
+        ? [filesFromController]
+        : [];
 
     // Normalisasi removePhotos agar selalu array of string
     if (photosDto.removePhotos) {
       if (!Array.isArray(photosDto.removePhotos)) {
         const remove = photosDto.removePhotos as any;
-        if (typeof remove === 'object' && remove !== null && 'value' in remove) {
-          photosDto.removePhotos = Array.isArray(remove.value) ? remove.value : [remove.value];
+        if (
+          typeof remove === 'object' &&
+          remove !== null &&
+          'value' in remove
+        ) {
+          photosDto.removePhotos = Array.isArray(remove.value)
+            ? remove.value
+            : [remove.value];
         } else if (typeof remove === 'string') {
           photosDto.removePhotos = [remove];
         } else {
@@ -332,7 +391,9 @@ export class UsersService {
         const url = await this.saveFileToSupabaseAndGetUrl(filePart);
         newPhotoUrls.push(url);
       }
-      const uniqueNewPhotos = newPhotoUrls.filter((url) => !updatedPhotos.includes(url));
+      const uniqueNewPhotos = newPhotoUrls.filter(
+        (url) => !updatedPhotos.includes(url),
+      );
       updatedPhotos = [...updatedPhotos, ...uniqueNewPhotos];
     }
 
@@ -346,9 +407,14 @@ export class UsersService {
         const normalizedPhoto = decodeURI(photo.trim());
         return !removeList.includes(normalizedPhoto);
       });
-      if (removeList.includes(user.profilePicture ? decodeURI(user.profilePicture.trim()) : '')) {
+      if (
+        removeList.includes(
+          user.profilePicture ? decodeURI(user.profilePicture.trim()) : '',
+        )
+      ) {
         if (!photosDto.profilePicture) {
-          photosDto.profilePicture = updatedPhotos.length > 0 ? updatedPhotos[0] : null;
+          photosDto.profilePicture =
+            updatedPhotos.length > 0 ? updatedPhotos[0] : null;
         }
       }
     }
@@ -370,7 +436,9 @@ export class UsersService {
 
   async deleteUserPhoto(userId: string, photoUrl: string) {
     if (!photoUrl || typeof photoUrl !== 'string') {
-      throw new BadRequestException('photoUrl is required and must be a string');
+      throw new BadRequestException(
+        'photoUrl is required and must be a string',
+      );
     }
     // Cari user
     const user = await this.prisma.user.findUnique({
@@ -393,7 +461,10 @@ export class UsersService {
     });
     // Update profilePicture jika perlu
     let newProfilePicture = user.profilePicture;
-    if (user.profilePicture && decodeURI(user.profilePicture.trim()) === normalizedUrl) {
+    if (
+      user.profilePicture &&
+      decodeURI(user.profilePicture.trim()) === normalizedUrl
+    ) {
       newProfilePicture = updatedPhotos.length > 0 ? updatedPhotos[0] : null;
     }
     // Simpan perubahan
@@ -418,7 +489,12 @@ export class UsersService {
       return this.prisma.user.update({
         where: { id: userId },
         data: { profilePicture: null },
-        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+        select: {
+          id: true,
+          fullname: true,
+          profilePicture: true,
+          Photos: true,
+        },
       });
     }
 
@@ -431,13 +507,19 @@ export class UsersService {
       if (!user) throw new NotFoundException('User not found');
       const normalizedUrl = decodeURI(body.photoUrl.trim());
       const exists = (user.Photos || []).some(
-        (p) => typeof p === 'string' && decodeURI(p.trim()) === normalizedUrl
+        (p) => typeof p === 'string' && decodeURI(p.trim()) === normalizedUrl,
       );
-      if (!exists) throw new BadRequestException('photoUrl is not in Photos array');
+      if (!exists)
+        throw new BadRequestException('photoUrl is not in Photos array');
       return this.prisma.user.update({
         where: { id: userId },
         data: { profilePicture: normalizedUrl },
-        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+        select: {
+          id: true,
+          fullname: true,
+          profilePicture: true,
+          Photos: true,
+        },
       });
     }
 
@@ -466,10 +548,17 @@ export class UsersService {
       return this.prisma.user.update({
         where: { id: userId },
         data: { profilePicture: url, Photos: updatedPhotos },
-        select: { id: true, fullname: true, profilePicture: true, Photos: true },
+        select: {
+          id: true,
+          fullname: true,
+          profilePicture: true,
+          Photos: true,
+        },
       });
     }
 
-    throw new BadRequestException('No valid photoUrl, file upload, or remove flag provided');
+    throw new BadRequestException(
+      'No valid photoUrl, file upload, or remove flag provided',
+    );
   }
 }

@@ -7,6 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [SwipeController],
   providers: [SwipeService],
-  exports: [SwipeService], 
+  exports: [SwipeService],
 })
 export class SwipeModule {}

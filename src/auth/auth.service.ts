@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -16,24 +21,21 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     const { fullname, nim, email, password, age } = registerDto;
-    
+
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { nim },
-          { email },
-        ],
+        OR: [{ nim }, { email }],
       },
     });
-    
+
     if (existingUser) {
       throw new ConflictException('User with this NIM or email already exists');
     }
-    
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Create new user
     const user = await this.prisma.user.create({
       data: {
@@ -49,22 +51,22 @@ export class AuthService {
         email: true,
       },
     });
-    
+
     // Generate tokens for auto login after registration
     const tokens = await this.generateTokens(user.id, nim);
-    
+
     // Return the formatted response
     return {
       status: 200,
-      message: "Berhasil Membuat Akun",
+      message: 'Berhasil Membuat Akun',
       data: {
         user_id: user.id,
         email: user.email,
         token: {
           access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token
-        }
-      }
+          refresh_token: tokens.refresh_token,
+        },
+      },
     };
   }
 
@@ -91,11 +93,15 @@ export class AuthService {
       refreshToken = this.jwtService.sign(
         { sub: user.id, nim: user.nim },
         {
-          secret: this.configService.get('REFRESH_TOKEN_SECRET') || 'your-refresh-token-secret',
+          secret:
+            this.configService.get('REFRESH_TOKEN_SECRET') ||
+            'your-refresh-token-secret',
           expiresIn: '7d',
         },
       );
-      const existing = await this.prisma.token.findUnique({ where: { token: refreshToken } });
+      const existing = await this.prisma.token.findUnique({
+        where: { token: refreshToken },
+      });
       if (!existing) isUnique = true;
     }
     const expiresAt = add(new Date(), { days: 7 });
@@ -114,7 +120,7 @@ export class AuthService {
     // Return the formatted response
     return {
       status: 200,
-      message: "Login berhasil",
+      message: 'Login berhasil',
       data: {
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -126,9 +132,11 @@ export class AuthService {
     try {
       // Verify token first
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('REFRESH_TOKEN_SECRET') || 'your-refresh-token-secret',
+        secret:
+          this.configService.get('REFRESH_TOKEN_SECRET') ||
+          'your-refresh-token-secret',
       });
-      
+
       // Find token in database
       const tokenRecord = await this.prisma.token.findFirst({
         where: {
@@ -139,11 +147,11 @@ export class AuthService {
           },
         },
       });
-      
+
       if (!tokenRecord) {
         throw new UnauthorizedException('Invalid refresh token');
       }
-      
+
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
         select: {
@@ -151,20 +159,20 @@ export class AuthService {
           nim: true,
         },
       });
-      
+
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
-      
+
       // Generate new access token only
       const accessToken = this.generateAccessToken(user.id, user.nim);
-      
+
       return {
         status: 200,
-        message: "Token berhasil diperbarui",
+        message: 'Token berhasil diperbarui',
         data: {
-          access_token: accessToken
-        }
+          access_token: accessToken,
+        },
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -175,11 +183,11 @@ export class AuthService {
     await this.prisma.token.deleteMany({
       where: { userId },
     });
-    
+
     return {
       status: 200,
-      message: "Logout berhasil",
-      data: null
+      message: 'Logout berhasil',
+      data: null,
     };
   }
 
@@ -195,7 +203,9 @@ export class AuthService {
       refreshToken = this.jwtService.sign(
         { sub: userId, nim },
         {
-          secret: this.configService.get('REFRESH_TOKEN_SECRET') || 'your-refresh-token-secret',
+          secret:
+            this.configService.get('REFRESH_TOKEN_SECRET') ||
+            'your-refresh-token-secret',
           expiresIn: '7d', // 7 days
         },
       );

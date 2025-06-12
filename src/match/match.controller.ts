@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import { MatchService } from './match.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
@@ -27,10 +34,7 @@ export class MatchController {
   }
 
   @Delete(':id')
-  async unmatch(
-    @User('id') userId: string,
-    @Param('id') matchId: string,
-  ) {
+  async unmatch(@User('id') userId: string, @Param('id') matchId: string) {
     return this.matchService.deleteMatch(userId, matchId);
   }
 }

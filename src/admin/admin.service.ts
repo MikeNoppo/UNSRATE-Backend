@@ -1,12 +1,23 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DashboardStatsResponseDto } from './dto/dashboard-stats.dto';
-import { ListUsersQueryDto, UserVerificationStatus } from './dto/list-users-query.dto';
-import { AdminUserListItemDto, ListUsersResponseDto, PageInfoDto } from './dto/list-users-response.dto';
+import {
+  ListUsersQueryDto,
+  UserVerificationStatus,
+} from './dto/list-users-query.dto';
+import {
+  AdminUserListItemDto,
+  ListUsersResponseDto,
+  PageInfoDto,
+} from './dto/list-users-response.dto';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async getDashboardStats(): Promise<DashboardStatsResponseDto> {
     const totalUsers = await this.prisma.user.count();
@@ -15,9 +26,8 @@ export class AdminService {
     });
 
     // Calculate verification rate (as a percentage)
-    const verificationRate = totalUsers > 0
-      ? Math.round((verifiedUsers / totalUsers) * 100)
-      : 0;
+    const verificationRate =
+      totalUsers > 0 ? Math.round((verifiedUsers / totalUsers) * 100) : 0;
 
     return {
       totalUsers,
@@ -47,7 +57,7 @@ export class AdminService {
       where.OR = [
         { fullname: { contains: search, mode: 'insensitive' } },
         { nim: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -84,7 +94,7 @@ export class AdminService {
     });
 
     // Map to response DTO format
-    const userItems: AdminUserListItemDto[] = users.map(user => ({
+    const userItems: AdminUserListItemDto[] = users.map((user) => ({
       ...user,
       reportCount: 0, // Placeholder for future implementation
     }));
@@ -108,9 +118,9 @@ export class AdminService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     const deletedUser = await this.prisma.user.delete({
-      where:{ id: userId },
+      where: { id: userId },
     });
 
     return {
@@ -119,9 +129,9 @@ export class AdminService {
       data: {
         id: deletedUser.id,
         fullname: deletedUser.fullname,
-        email: deletedUser.email
-      }
-    }
+        email: deletedUser.email,
+      },
+    };
   }
 
   async verifyUser(userId: string) {
@@ -135,7 +145,7 @@ export class AdminService {
 
     return this.prisma.user.update({
       where: { id: userId },
-      data: { verified: true }
+      data: { verified: true },
     });
   }
 }

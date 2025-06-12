@@ -13,17 +13,17 @@ import { InterestModule } from './interest/interest.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal : true}),
+    ConfigModule.forRoot({ isGlobal: true }),
     UsersModule,
     AuthModule,
     PddiktiModule,
-    PrismaModule, 
+    PrismaModule,
     AdminModule,
     DiscoveryModule,
     SwipeModule,
     MatchModule,
     ChatModule,
-    InterestModule
+    InterestModule,
   ],
   providers: [],
 })

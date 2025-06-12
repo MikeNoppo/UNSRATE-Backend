@@ -1,9 +1,9 @@
-import { 
-  TotalUsersProperty, 
-  VerifiedUsersProperty, 
+import {
+  TotalUsersProperty,
+  VerifiedUsersProperty,
   VerificationRateProperty,
   // TotalReportsProperty,
-  // ReportedUsersProperty 
+  // ReportedUsersProperty
 } from '../../decorators/admin/admin-property.decorators';
 
 /**

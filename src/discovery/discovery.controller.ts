@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Query, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DiscoveryService } from './discovery.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../decorators/user.decorator';
@@ -13,14 +21,21 @@ export class DiscoveryController {
   @Get()
   async getDiscovery(
     @User('id') userId: string,
-    @Query(new ValidationPipe({ transform: true })) filterOptions: DiscoveryFilterDto,
+    @Query(new ValidationPipe({ transform: true }))
+    filterOptions: DiscoveryFilterDto,
     @Query('page') page = 0,
   ): Promise<DiscoveryResponseDto> {
-    return this.discoveryService.getRecommendations(userId, filterOptions, +page);
+    return this.discoveryService.getRecommendations(
+      userId,
+      filterOptions,
+      +page,
+    );
   }
 
   @Get('feed')
-  async getInitialFeed(@User('id') userId: string): Promise<DiscoveryResponseDto> {
+  async getInitialFeed(
+    @User('id') userId: string,
+  ): Promise<DiscoveryResponseDto> {
     return this.discoveryService.getQuickRecommendations(userId);
   }
 

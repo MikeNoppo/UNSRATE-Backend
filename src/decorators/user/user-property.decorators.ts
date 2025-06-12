@@ -1,15 +1,15 @@
 import { applyDecorators } from '@nestjs/common';
-import { 
-  IsOptional, 
-  IsString, 
-  IsUrl, 
-  IsArray, 
-  IsDateString, 
-  IsEnum, 
-  IsInt, 
-  Min, 
-  Max, 
-  MaxLength 
+import {
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
@@ -23,11 +23,11 @@ export function FullnameProperty() {
       description: 'Full name of the user',
       example: 'John Doe',
       required: false,
-      maxLength: 100
+      maxLength: 100,
     }),
     IsOptional(),
     IsString(),
-    MaxLength(100)
+    MaxLength(100),
   );
 }
 
@@ -39,10 +39,10 @@ export function ProfilePictureProperty() {
     ApiProperty({
       description: 'URL to the profile picture',
       example: 'https://example.com/profile.jpg',
-      required: false
+      required: false,
     }),
     IsOptional(),
-    IsUrl()
+    IsUrl(),
   );
 }
 
@@ -53,13 +53,16 @@ export function PhotosArrayProperty() {
   return applyDecorators(
     ApiProperty({
       description: 'Array of photo URLs',
-      example: ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg'],
+      example: [
+        'https://example.com/photo1.jpg',
+        'https://example.com/photo2.jpg',
+      ],
       required: false,
-      isArray: true
+      isArray: true,
     }),
     IsOptional(),
     IsArray(),
-    IsUrl({}, { each: true })
+    IsUrl({}, { each: true }),
   );
 }
 
@@ -72,11 +75,11 @@ export function BioProperty() {
       description: 'User biography',
       example: 'I am a student studying Computer Science',
       required: false,
-      maxLength: 500
+      maxLength: 500,
     }),
     IsOptional(),
     IsString(),
-    MaxLength(500)
+    MaxLength(500),
   );
 }
 
@@ -88,10 +91,10 @@ export function DateOfBirthProperty() {
     ApiProperty({
       description: 'Date of birth in ISO format',
       example: '1995-08-24',
-      required: false
+      required: false,
     }),
     IsOptional(),
-    IsDateString()
+    IsDateString(),
   );
 }
 
@@ -104,10 +107,10 @@ export function GenderProperty() {
       description: 'User gender',
       enum: Gender,
       example: 'MALE',
-      required: false
+      required: false,
     }),
     IsOptional(),
-    IsEnum(Gender)
+    IsEnum(Gender),
   );
 }
 
@@ -120,11 +123,11 @@ export function AddressProperty() {
       description: 'User address',
       example: 'Jalan Dipatiukur No.112-116, Bandung',
       required: false,
-      maxLength: 255
+      maxLength: 255,
     }),
     IsOptional(),
     IsString(),
-    MaxLength(255)
+    MaxLength(255),
   );
 }
 
@@ -137,10 +140,10 @@ export function GenderPreferenceProperty() {
       description: 'Preferred gender for matching',
       enum: Gender,
       example: 'FEMALE',
-      required: false
+      required: false,
     }),
     IsOptional(),
-    IsEnum(Gender)
+    IsEnum(Gender),
   );
 }
 
@@ -153,11 +156,11 @@ export function MinAgePreferenceProperty() {
       description: 'Minimum age preference for matching',
       example: 18,
       minimum: 18,
-      required: false
+      required: false,
     }),
     IsOptional(),
     IsInt(),
-    Min(18)
+    Min(18),
   );
 }
 
@@ -170,11 +173,11 @@ export function MaxAgePreferenceProperty() {
       description: 'Maximum age preference for matching',
       example: 35,
       maximum: 99,
-      required: false
+      required: false,
     }),
     IsOptional(),
     IsInt(),
-    Max(99)
+    Max(99),
   );
 }
 
@@ -185,13 +188,16 @@ export function AddPhotosProperty() {
   return applyDecorators(
     ApiProperty({
       description: 'Array of photo URLs to add to the user profile',
-      example: ['https://example.com/photo1.jpg', 'https://example.com/photo2.jpg'],
+      example: [
+        'https://example.com/photo1.jpg',
+        'https://example.com/photo2.jpg',
+      ],
       required: false,
-      isArray: true
+      isArray: true,
     }),
     IsOptional(),
     IsArray(),
-    IsUrl({}, { each: true })
+    IsUrl({}, { each: true }),
   );
 }
 
@@ -204,10 +210,10 @@ export function RemovePhotosProperty() {
       description: 'Array of photo URLs to remove from the user profile',
       example: ['https://example.com/old-photo.jpg'],
       required: false,
-      isArray: true
+      isArray: true,
     }),
     IsOptional(),
     IsArray(),
-    IsString({ each: true })
+    IsString({ each: true }),
   );
 }
