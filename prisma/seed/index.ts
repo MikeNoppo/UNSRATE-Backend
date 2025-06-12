@@ -5,6 +5,7 @@ import { seedUsers } from './users';
 // import { assignInterests } from './helpers'; // REMOVED
 import { seedSwipes } from './swipes';
 import { seedMessages } from './messages'; // ADDED
+import { seedUserInterests } from './userInterests'; // Import the new seeder
 
 // Define interests directly in this file
 const interests = [
@@ -88,6 +89,11 @@ async function main() {
     
     // Generate messages between matches - REMOVED
     const messageCount = await seedMessages(prisma); // ADDED
+
+    // Seed UserInterests - This connects users to interests
+    // Make sure interests are seeded before this step
+    const userInterestCount = await seedUserInterests(prisma);
+    console.log(`Seeded ${userInterestCount} user interest links.`);
     
     console.log('\\n===== Seeding Summary =====');
     console.log(`Created ${users.length} users`);

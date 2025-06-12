@@ -348,7 +348,7 @@ export class UsersService {
     photosDto: ManageUserPhotosDto,
     filesFromController?: any[],
   ) {
-    let filesToProcess: any[] = Array.isArray(filesFromController)
+    const filesToProcess: any[] = Array.isArray(filesFromController)
       ? filesFromController
       : filesFromController
         ? [filesFromController]
